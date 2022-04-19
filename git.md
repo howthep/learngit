@@ -7,3 +7,4 @@
 - log --pretty=oneline
 - reset --hard HEAD^
 - reflog
+- restore
