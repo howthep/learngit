@@ -5,6 +5,7 @@
 - push
 - pull
 ---
+### Show Info
 - status
 - diff
 - log
