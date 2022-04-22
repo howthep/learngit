@@ -1,5 +1,4 @@
 # Git
----
 - add
 - commit -m ''
 - status
@@ -8,4 +7,7 @@
 - reset --hard HEAD^
 - reflog
 - restore
-- checkout -b
+- branch
+	- -b: delete branch
+- switch 
+	- -c: create and switch
