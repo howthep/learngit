@@ -19,3 +19,6 @@
 	- -b: delete branch
 - switch 
 	- -c: create and switch
+- stash 
+	- list
+	- pop
