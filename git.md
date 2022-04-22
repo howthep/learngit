@@ -1,12 +1,19 @@
 # Git
-- add
-- commit -m ''
+- add [files]
+- commit
+	- -m ''
+- push
+- pull
+---
 - status
 - diff
-- log --pretty=oneline
-- reset --hard HEAD^
+- log
+	- --pretty=oneline
 - reflog
+---
+- reset --hard HEAD^
 - restore
+---
 - branch
 	- -b: delete branch
 - switch 
