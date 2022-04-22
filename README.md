@@ -1,7 +1,8 @@
 # Git
+### Basics
 - add [files]
 - commit
-	- -m ''
+	- -m 'message'
 - push
 - pull
 ---
