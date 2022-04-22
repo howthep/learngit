@@ -19,4 +19,3 @@
 	- -b: delete branch
 - switch 
 	- -c: create and switch
-dev branch add
