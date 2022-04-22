@@ -16,9 +16,12 @@
 - restore
 ### Branch
 - branch
+	- list all branch
 	- -b: delete branch
 - switch 
 	- -c: create and switch
+- merge 
+	- -m 'message'
 - stash 
 	- list
 	- pop
