@@ -4,11 +4,12 @@ function SmartBracket(brc)
 	let line = getline('.')
 	let cursor = col('.')
 	let char = nr2char(strgetchar(line,cursor))
+	let pairs=['"','`',"'"]
 	if char ==a:brc
+		" there is brc, so just delete it
 		execute("normal x")
-		"execute('print')
-	else
-		execute("normal a")
+	elseif index(pairs,a:brc)>-1
+		execute('normal! i'..a:brc)
 	endif
 endfunction
 
@@ -20,8 +21,8 @@ function SmartCR()
 	if line1 =~ '^\s*}'
 		execute('normal O ')
 		" execute("normal O\<Tab>\<BS>")
-	" else 
-	" 	call setline(lnum,repeat("\<Tab>",ind/&tabstop)..line1)
+		" else 
+		" 	call setline(lnum,repeat("\<Tab>",ind/&tabstop)..line1)
 	endif
 endfunction
 
@@ -48,16 +49,13 @@ set smartindent
 set enc=utf-8
 set mouse=
 set is
-set guifont =Lucida_Sans_Typewriter:h20:cANSI:qDRAFT 
+set guifont =Lucida_Sans_Typewriter:h18:cANSI:qDRAFT 
 :set sessionoptions+=unix,slash
 set smartcase
 :map <F2> oDate: <Esc>:read !date<CR>kJk
 :map <F3> "+p
 
 inoremap ( ()<Left>
-inoremap ` ``<Left>
-inoremap " ""<Left>
-inoremap ' ''<Left>
 inoremap [ []<Left>
 inoremap { {}<Left>
 

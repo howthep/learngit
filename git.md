@@ -8,3 +8,4 @@
 - reset --hard HEAD^
 - reflog
 - restore
+- checkout -b
