@@ -5,7 +5,6 @@
 	- -m 'message'
 - push
 - pull
----
 ### Show Info
 - status
 - diff
@@ -13,10 +12,9 @@
 	- --pretty=oneline
 	- -- graph
 - reflog
----
 - reset --hard HEAD^
 - restore
----
+### Branch
 - branch
 	- -b: delete branch
 - switch 
