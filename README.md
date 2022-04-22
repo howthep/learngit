@@ -11,6 +11,7 @@
 - diff
 - log
 	- --pretty=oneline
+	- -- graph
 - reflog
 ---
 - reset --hard HEAD^
