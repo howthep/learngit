@@ -1,5 +1,6 @@
 nnoremap <F5> :w\|so %<CR>
 inoremap <F5> <c-c>:w\|so % <CR>
+""
 func SmartDelete(offset)
 	let cursPos=col('.')
 	let line = getline('.')
