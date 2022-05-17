@@ -20,13 +20,12 @@ function SmartCR()
 
 	if line1 =~ '^\s*}'
 		execute('normal O ')
-		" execute("normal O\<Tab>\<BS>")
 		" else 
 		" 	call setline(lnum,repeat("\<Tab>",ind/&tabstop)..line1)
 	endif
 endfunction
 
-imap <CR> <CR><Esc>:call SmartCR()<CR>A
+inoremap <CR> <CR> <Esc>:call SmartCR()<CR>$s
 syntax on
 filetype plugin on
 set conceallevel=0
@@ -45,10 +44,12 @@ set softtabstop=4
 set foldcolumn=2
 set foldmethod=indent
 set foldlevel=1
-set smartindent
+set cindent
+set fileencodings=utf-8,gbk
 set enc=utf-8
 set mouse=
 set is
+
 set guifont =Lucida_Sans_Typewriter:h18:cANSI:qDRAFT 
 :set sessionoptions+=unix,slash
 set smartcase
