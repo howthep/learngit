@@ -1,5 +1,5 @@
-" /c/Users/86159/.vim/ftplugin/javascript.vim
-" /c/Users/86159/.vim/ftplugin/html.vim
+" ~/.vim/ftplugin/javascript.vim
+" ~/.vim/ftplugin/html.vim
 function SmartBracket(brc)	
 	let line = getline('.')
 	let cursor = col('.')
@@ -14,21 +14,28 @@ function SmartBracket(brc)
 endfunction
 
 function SmartCR()
-	let lnum = line('.')
-	let line1 = getline(lnum)
-	let ind = indent(lnum-1)
-
-	if line1 =~ '^\s*}'
-		execute('normal O ')
-		" execute("normal O\<Tab>\<BS>")
-		" else 
-		" 	call setline(lnum,repeat("\<Tab>",ind/&tabstop)..line1)
+	let line = getline('.')
+	let cursor = col('.')
+	let chr = nr2char(strgetchar(line,cursor))
+	"chr is char after cursor"
+	echo chr
+	if chr =='}'
+		execute("normal! a\<cr>\<esc>k$")
 	endif
-endfunction
-
-imap <CR> <CR><Esc>:call SmartCR()<CR>A
+endf
+func Snippet(abbr,snip)
+	let cmd ="inoreabbr <buffer> ".a:abbr ." ".a:snip
+	let cmd .='<C-c>?$1<cr>c2w'
+	execute(cmd)
+endf
+augroup jsro
+	au!
+	autocmd BufWritePre,Bufread * :normal mt=ap`t
+augroup END
+inoremap <CR> <ESC>:call SmartCR()<cr>a<cr>
 syntax on
 filetype plugin on
+filetype indent on
 set conceallevel=0
 set noundofile
 set nobackup
@@ -45,7 +52,7 @@ set softtabstop=4
 set foldcolumn=2
 set foldmethod=indent
 set foldlevel=1
-set smartindent
+set cindent
 set enc=utf-8
 set mouse=
 set is
