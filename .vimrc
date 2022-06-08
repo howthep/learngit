@@ -25,7 +25,7 @@ function SmartCR()
 	endif
 endfunction
 
-inoremap <CR> <CR> <Esc>:call SmartCR()<CR>$s
+inoremap <CR> <CR> <Esc>:call SmartCR()<CR>s
 syntax on
 filetype plugin on
 set conceallevel=0
@@ -58,6 +58,7 @@ set smartcase
 :map <F3> "+p
 
 autocmd	Filetype markdown se nocindent
+autocmd	Filetype sh  nnorem <F5> :w\|!bash %<cr>
 inoremap ( ()<Left>
 inoremap [ []<Left>
 inoremap { {}<Left>
