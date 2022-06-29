@@ -45,13 +45,12 @@ set foldcolumn=2
 set foldmethod=indent
 set foldlevel=1
 
-set cindent
 
 set fileencodings=utf-8,gbk
 set enc=utf-8
 set mouse=
 set incsearch
-set guifont =Lucida_Sans_Typewriter:h18:cANSI:qDRAFT 
+""set guifont =Lucida_Sans_Typewriter:h18:cANSI:qDRAFT 
 :set sessionoptions+=unix,slash
 set smartcase
 :map <F2> oDate: <Esc>:read !date<CR>kJk
@@ -59,6 +58,7 @@ set smartcase
 
 autocmd	Filetype markdown se nocindent
 autocmd	Filetype sh  nnorem <F5> :w\|!bash %<cr>
+autocmd	Filetype rust  se cindent
 inoremap ( ()<Left>
 inoremap [ []<Left>
 inoremap { {}<Left>
