@@ -1,6 +1,6 @@
 " /c/Users/86159/.vim/ftplugin/javascript.vim
 " ~/.vim/ftplugin/rust.vim
-function SmartBracket(brc)	
+function! SmartBracket(brc)	
 	let line = getline('.')
 	let cursor = col('.')
 	let char = nr2char(strgetchar(line,cursor))
@@ -13,11 +13,8 @@ function SmartBracket(brc)
 	endif
 endfunction
 
-func SmartDelete()
-	echo 111
-endf
 
-function SmartCR()
+function! SmartCR()
 	let lnum = line('.')
 	let line1 = getline(lnum)
 	let ind = indent(lnum-1)
@@ -56,14 +53,31 @@ set enc=utf-8
 set mouse=
 set incsearch
 ""set guifont =Lucida_Sans_Typewriter:h18:cANSI:qDRAFT 
-:set sessionoptions+=unix,slash
+set sessionoptions+=unix,slash
 set smartcase
-:map <F2> oDate: <Esc>:read !date<CR>kJk
-:map <F3> "+p
+
+""let mapleader = "\\"
+let mapleader="\<space>"
+"disable"
+noremap <Up> <nop>
+noremap <down> <nop>
+noremap <left> <nop>
+noremap <right> <nop>
+inoremap <esc> <nop>
+inoremap <c-c> <nop>
+inoremap jk <esc>
+
+nnoremap <F2> oDate: <Esc>:read !date<CR>kJk
+nnoremap <F3> "+p
+nnoremap <cr> za
+nnoremap H ^
+nnoremap L $
 
 autocmd	Filetype markdown se nocindent
-autocmd	Filetype rust se smartindent
-autocmd	Filetype sh  nnorem <F5> :w\|!bash %<cr>
+""autocmd	Filetype rust se smartindent
+autocmd	Filetype sh  nnoremap <F5> :w\|!bash %<cr>
+autocmd	Filetype vim nnoremap <F5> :w\|so %<cr>
+
 inoremap ( ()<Left>
 inoremap [ []<Left>
 inoremap { {}<Left>
@@ -74,16 +88,33 @@ inoremap ' '<Esc>:call SmartBracket("'")<CR>a
 inoremap ` `<Esc>:call SmartBracket('`')<CR>a
 inoremap ] ]<Esc>:call SmartBracket(']')<CR>a
 inoremap ) )<Esc>:call SmartBracket(')')<CR>a
+
 inoremap <C-L> <DEL>
+inoremap <c-D> <esc>^Da
+inoremap <c-U> <esc>viwUea
+
 cnoremap <C-p> <Up>
 cnoremap <C-n> <Down>
-vnoremap \[ c[<C-r>"]<Esc>
-vnoremap \] c[<C-r>"]<Esc>
-vnoremap \( c(<C-r>")<Esc>
-vnoremap \) c(<C-r>")<Esc>
-vnoremap \' c'<C-r>"'<Esc>
+
+vnoremap <leader>{ c{<C-r>"}<Esc>
+vnoremap <leader>} c{<C-r>"}<Esc>
+vnoremap <leader>[ c[<C-r>"]<Esc>
+vnoremap <leader>] c[<C-r>"]<Esc>
+vnoremap <leader>( c(<C-r>")<Esc>
+vnoremap <leader>) c(<C-r>")<Esc>
+vnoremap <leader>' c'<C-r>"'<Esc>
+vnoremap <leader>" c"<C-r>""<Esc>
+nnoremap <leader>ev :vsplit $MYVIMRC<cr>
+
+nnoremap _ :.m.-2<cr>
+nnoremap - :.m.+1<cr>
+nnoremap + :.t.<cr>
+vnoremap - :'<,'>m'>+1<cr>gv
+vnoremap _ :'<,'>m'<-2<cr>gv
+
 nnoremap & :&&<CR>
 vnoremap & :&&<CR>
+
 func!  SmartDelete()
 	""echom "SmartDelete"
 	let line = getline(".")
@@ -123,10 +154,9 @@ func!  SmartDelete()
 			normal hh
 		endif
 	else
-		normal x
+		execute "normal! a\<bs>"
 	endif
 endf
-
-
 inoremap <C-H> <ESC>:call SmartDelete()<cr>a
-"aa"
+
+""asdad
