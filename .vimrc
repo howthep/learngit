@@ -13,7 +13,6 @@ function! SmartBracket(brc)
 	endif
 endfunction
 
-
 function! SmartCR()
 	let lnum = line('.')
 	let line1 = getline(lnum)
@@ -63,7 +62,6 @@ noremap <Up> <nop>
 noremap <down> <nop>
 noremap <left> <nop>
 noremap <right> <nop>
-inoremap <esc> <nop>
 inoremap <c-c> <nop>
 inoremap jk <esc>
 
@@ -111,6 +109,7 @@ nnoremap - :.m.+1<cr>
 nnoremap + :.t.<cr>
 vnoremap - :'<,'>m'>+1<cr>gv
 vnoremap _ :'<,'>m'<-2<cr>gv
+vnoremap + :'<,'>t'<-1<cr>gv
 
 nnoremap & :&&<CR>
 vnoremap & :&&<CR>
