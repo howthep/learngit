@@ -1,5 +1,5 @@
 " /c/Users/86159/.vim/ftplugin/javascript.vim
-" /c/Users/86159/.vim/ftplugin/html.vim
+" ~/.vim/ftplugin/rust.vim
 function SmartBracket(brc)	
 	let line = getline('.')
 	let cursor = col('.')
@@ -12,6 +12,10 @@ function SmartBracket(brc)
 		execute('normal! i'..a:brc)
 	endif
 endfunction
+
+func SmartDelete()
+	echo 111
+endf
 
 function SmartCR()
 	let lnum = line('.')
@@ -28,6 +32,7 @@ endfunction
 inoremap <CR> <CR> <Esc>:call SmartCR()<CR>s
 syntax on
 filetype plugin on
+filetype indent on
 set conceallevel=0
 set noundofile
 set nobackup
@@ -57,8 +62,8 @@ set smartcase
 :map <F3> "+p
 
 autocmd	Filetype markdown se nocindent
+autocmd	Filetype rust se smartindent
 autocmd	Filetype sh  nnorem <F5> :w\|!bash %<cr>
-autocmd	Filetype rust  se cindent
 inoremap ( ()<Left>
 inoremap [ []<Left>
 inoremap { {}<Left>
@@ -79,3 +84,49 @@ vnoremap \) c(<C-r>")<Esc>
 vnoremap \' c'<C-r>"'<Esc>
 nnoremap & :&&<CR>
 vnoremap & :&&<CR>
+func!  SmartDelete()
+	""echom "SmartDelete"
+	let line = getline(".")
+	let cursor = col(".")-1
+	let char= line[cursor]
+	let pairs=['(',')','{','}']
+	let ind = index(pairs,char)
+	if ind>=0
+		let end=0
+		let start=0
+			normal %
+		if ind %2==0
+			let start = cursor
+			""let end = match(line,pairs[ind+1],cursor)
+			let end = col(".")-1
+		else
+			let end = cursor
+			""let start = match(line,pairs[ind-1],0)
+			let start =col('.')-1
+		endif	
+			normal %
+		""echo line[start]
+		""echo line[end]
+		let head = strcharpart(line,0,start)
+		let rest = strcharpart(line,start,strlen(line)-start)
+		""echo 'head'.head 
+		""echo "rest".rest 
+		let sub=strcharpart(line,start,end-start+1)
+		""echo sub
+		let trimStr = strcharpart(sub,1,strlen(sub)-2)
+		""echo "target: "..trimStr
+
+		let res =head..substitute(rest,sub,trimStr,"")
+		""echo res
+		call setline(".",res)
+		if ind%2==0
+			normal hh
+		endif
+	else
+		normal x
+	endif
+endf
+
+
+inoremap <C-H> <ESC>:call SmartDelete()<cr>a
+"aa"

@@ -25,4 +25,6 @@
 - stash 
 	- list
 	- pop
+### Remote
+- remote set-url origin [github url]
 
