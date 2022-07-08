@@ -121,3 +121,8 @@ mcd(){
 	let a=${1:?need argument}
 	mkdir -p $1 && cd $1
  }
+
+export DENO_INSTALL="/home/robuntu/.deno"
+export PATH="$DENO_INSTALL/bin:$PATH"
+alias ..="cd .."
+alias rm="rm -i"
