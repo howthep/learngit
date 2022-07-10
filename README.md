@@ -27,4 +27,5 @@
 	- pop
 ### Remote
 - remote set-url origin [github url]
-
+### config
+- alias.[name] [cmd]
