@@ -1,11 +1,9 @@
-function SmartTag()
-	let currentLine = getline('.')
-	" s/\v\<(\w+)\>/\0<\/\1>
-	let change = substitute(currentLine,'\v\<(\w+)\>','\0  <\/\1>','')
-	call setline('.',change)
-	call cursor('.',col('.')+1)
-endfunction
-inoremap > ><Esc>:call SmartTag()<CR>a
-" inoremap<F5> <Esc>:w <CR>:so %<CR>
-" nnoremap<F5> <Esc>:w <CR>:so %<CR>
-set mps+=<:> 
+if &ft==#'html'
+setlocal nowrap
+iabbrev <buffer> p <p></p><esc>F<i
+iabbrev <buffer> div <div></div><esc>F<i
+iabbrev <buffer> script <script src=""></script><esc>F=la
+iabbrev <buffer> html <html lang="cn"><cr><head><cr></head><cr><body><cr></body><cr></html><esc>/head/b-2<cr>o
+iabbrev <buffer> title <title></title><esc>F<i
+iabbrev <buffer> link <link rel="stylesheet" type="text/css" href="style.css"/><esc>Fsa
+endif
