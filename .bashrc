@@ -88,7 +88,7 @@ fi
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # some more ls aliases
-alias ll='ls -alF'
+alias ll='ls -ahlF'
 alias la='ls -A'
 alias l='ls -CF'
 
@@ -121,8 +121,9 @@ mcd(){
 	let a=${1:?need argument}
 	mkdir -p $1 && cd $1
  }
-
 export DENO_INSTALL="/home/robuntu/.deno"
 export PATH="$DENO_INSTALL/bin:$PATH"
+set -o vi
 alias ..="cd .."
 alias rm="rm -i"
+alias open="wslview"

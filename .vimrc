@@ -1,4 +1,4 @@
-" ~/.vim/ftplugin/rust.vim
+" ~/.vim/ftplugin/typescript.vim
 "function! SmartBracket(brc)	{{{
  
 function! SmartBracket(brc)	
@@ -8,7 +8,7 @@ function! SmartBracket(brc)
 	let pairs=['"','`',"'"]
 	if char ==a:brc
 		" there is brc, so just delete it
-		execute("normal x")
+		execute("normal! x")
 	elseif index(pairs,a:brc)>-1
 		execute('normal! i'..a:brc)
 	endif
@@ -20,7 +20,7 @@ function! SmartCR()
 	let ind = indent(lnum-1)
 
 	if line1 =~ '^\s*}'
-		execute('normal O ')
+		execute('normal! O ')
 		" else 
 		" 	call setline(lnum,repeat("\<Tab>",ind/&tabstop)..line1)
 	endif
@@ -70,6 +70,7 @@ noremap <left> <nop>
 noremap <right> <nop>
 inoremap <c-c> <nop>
 inoremap jk <esc>
+inoremap <esc> <nop>
 "}}}"
 
 nnoremap <F2> oDate: <Esc>:read !date<CR>kJk
@@ -78,7 +79,7 @@ nnoremap <cr> za
 nnoremap H ^
 nnoremap L $
 
-"group for different filetype{{{
+"autocmd group for different filetype{{{
 augroup maingroup
 	autocmd!
 	autocmd	Filetype markdown setlocal smartindent
@@ -90,6 +91,8 @@ augroup maingroup
 	autocmd	Filetype vim iabbrev <buffer> iabf iabbrev <buffer>
 	autocmd	Filetype vim iabbrev <buffer> bf <buffer>
 	autocmd	Filetype vim iabbrev <buffer> fdmk "{{{<cr><cr>}}}<up><bs>
+	autocmd	Filetype vim let b:CMT='"'
+	autocmd	Filetype python let b:CMT='#'
 augroup END
 "}}}
 
@@ -154,6 +157,8 @@ onoremap P a(
 onoremap U a{
 onoremap S a[
 onoremap Q a"
+onoremap H ^
+onoremap L $
 "}}}"
 
 " func!  SmartDelete() "{{{
@@ -168,7 +173,7 @@ func!  SmartDelete()
 	if ind>=0
 		let end=0
 		let start=0
-		normal %
+		normal! %
 		if ind %2==0
 			let start = cursor
 			""let end = match(line,pairs[ind+1],cursor)
@@ -178,7 +183,7 @@ func!  SmartDelete()
 			""let start = match(line,pairs[ind-1],0)
 			let start =col('.')-1
 		endif	
-		normal %
+		normal! %
 		""echo line[start]
 		""echo line[end]
 		let head = strcharpart(line,0,start)
@@ -190,7 +195,7 @@ func!  SmartDelete()
 		let trimStr = strcharpart(sub,1,strlen(sub)-2)
 		""echom "target: "..trimStr
 
-		let res =head..substitute(rest,sub,trimStr,"")
+		let res =head..substitute(rest,'\V'.sub,trimStr,"")
 		""echom res
 		call setline(".",res)
 
@@ -203,3 +208,22 @@ endf
 "}}}"
 inoremap <C-H> <ESC>:call SmartDelete()<cr>a
 
+"TODO
+"add comment which is at head and end,like html
+"Comment {{{
+ 
+function! Comment()
+	if len(b:CMT)==0
+				echo "you need let b:CMT is you comment"
+		return
+	endif
+	let line=getline(".")
+	if line=~#'\V\^\s\*'..b:CMT
+		execute "normal! ^".repeat('x',len(b:CMT))
+	else
+		execute "normal! I".b:CMT
+	endif
+endf
+nnoremap  <leader>c :call Comment()<cr>
+vnoremap  <leader>c :call Comment()<cr>
+"}}}"
