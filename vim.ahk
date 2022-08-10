@@ -22,7 +22,7 @@ loop{
 	 if(motion!="no"){
 		 keywait, shift
 		if (motion=inchar){
-		  send,{home}{shift down}{end}
+		  send,{up}{end}{shift down}{down}{end}{left}
 		 }
 		else{
 			send,{shift down}
@@ -31,7 +31,10 @@ loop{
 		send,{shift up}
 		switch motion{
 			case "d":
-				send,{bs}
+				send,^x
+			case "y":
+				send,^c
+				Deselect()
 			case "c":
 				send,{bs}
 				mode:=2
@@ -50,6 +53,10 @@ Normal(cmd){
 			motion:="d"
 		 case Asc("c"):
 			motion:="c"
+		 case Asc("y"):
+			motion:="y"
+		 case Asc("p"):
+			send ^v
 		 case Asc("o"):
 			 send,{end}{enter}
 			 mode:=2
@@ -73,14 +80,19 @@ Normal(cmd){
 			 send,{right}
 		 case Asc("w"):
 			 send,^{right}
+		 case Asc("e"):
+			 send,^{right}{left}
 		 case Asc("b"):
 			 send,^{left}
 		 case Asc("x"):
 			 send,{bs}
+		 case Asc("s"):
+			 send,{bs}
+			 mode:=2
 		 case Asc("X"):
 			 send,{del}
 		 case Asc("u"):
-			 send,^z{right}{left}
+			 send,^z
 		 case 18:
 			 send,^+z
 		 case 4:
@@ -90,8 +102,11 @@ Normal(cmd){
 		 case Asc("i"):
 			 mode:=2
 		}	
-
  }
+
+Deselect(){
+	send,{right}
+}
 ::opva::open vim.ahk{enter}
 
 ^g::
