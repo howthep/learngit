@@ -115,15 +115,17 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-. "$HOME/.cargo/env"
 echo Hello $USER
 mcd(){
 	let a=${1:?need argument}
 	mkdir -p $1 && cd $1
- }
-export DENO_INSTALL="/home/robuntu/.deno"
-export PATH="$DENO_INSTALL/bin:$PATH"
+}
 set -o vi
 alias ..="cd .."
 alias rm="rm -i"
-alias open="wslview"
+alias open="powershell.exe start "
+alias ebrc="vi ~/.bashrc"
+
+todo(){
+	cat ~/document/todo
+ }
