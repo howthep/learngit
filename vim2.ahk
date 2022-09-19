@@ -2,7 +2,7 @@ global Mode=1
 global History:=""
 showMode(mode){
 	ModeText:=["Normal","Insert","Motion","Mouse","Command"]
-	tooltip % "Mode="ModeText[Mode],10,50
+	tooltip % "Mode="ModeText[Mode],10,-4000
  }
 showMode(Mode)
 #usehook
@@ -36,7 +36,6 @@ Suspend ; restore state by revertting again
 return
 
 
-
 lctrl::
 Suspend
 Mode=1
@@ -54,6 +53,14 @@ return
 r::
 vim("r")
 return
+
+; finished
+:::
+vim(":")
+return
+o::
+vim("o")
+return
 a::
 vim("a")
 return
@@ -63,8 +70,6 @@ return
 n::
 vim("n")
 return
-
-; finished
 d::
 vim("d")
 return
@@ -119,20 +124,39 @@ vim(cmd){
 			insert(cmd)
 		case 4:
 			mouse(cmd)
+		case 5:
+			command(cmd)
 	}
 }
-; fine tone-hjkluinm
-; wide move-wasd
+
+command(cmd){
+	History:=History . cmd
+	msgbox , , , %History%,1
+ }
+
+; click-as
+; fine tone-hjklionm
+; wide move-udwb
 ; scroll-zx
 mouse(cmd){
 	winGetActiveStats,t,w,h,x,y
 	dh:=5
-	dw:=5*w/h
-	gain:=3
-	if(cmd="q"){
+	dw:=dh*w/h
+	gain:=2
+	if(cmd="a"){
 		click,down
-		keywait,q
+		keywait,a
 		click,up
+	}else if(cmd="s"){
+		click,right
+	}else if(cmd="m"){
+		mousemove,dw*gain,dh*gain,0,R
+	}else if(cmd="n"){
+		mousemove,-dw*gain,dh*gain,0,R
+	}else if(cmd="o"){
+		mousemove,dw*gain,-dh*gain,0,R
+	}else if(cmd="i"){
+		mousemove,-dw*gain,-dh*gain,0,R
 	}else if(cmd="j"){
 		mousemove,0,dh*gain,0,R
 	}else if(cmd="k"){
@@ -141,22 +165,24 @@ mouse(cmd){
 		mousemove,-dw*gain,0,0,R
 	}else if(cmd="l"){
 		mousemove,dw*gain,0,0,R
-	}else if(cmd="w"){
+	}else if(cmd="u"){
 		mousemove,0,-h/dh,0,R
-	}else if(cmd="s"){
-		mousemove,0,h/dh,0,R
-	}else if(cmd="a"){
-		mousemove,-w/dw,0,0,R
 	}else if(cmd="d"){
+		mousemove,0,h/dh,0,R
+	}else if(cmd="b"){
+		mousemove,-w/dw,0,0,R
+	}else if(cmd="w"){
 		mousemove,w/dw,0,0,R
-	}else if(cmd="e"){
-		click,right
 	}else if(cmd="z"){
 		click,wheeldown
 	}else if(cmd="x"){
 		click,wheelup
+	}else if(cmd="q"){
+		Back()
 	}
 }
+
+
 normal(cmd){
 	showMode(Mode)
 	if(cmd="i"){
@@ -167,38 +193,52 @@ normal(cmd){
 		Mode=4
 		showMode(Mode)
 	}else if(cmd="j"){
-			send,{Down}
+		send,{Down}
 	}else if(cmd="k"){
-			send,{up} 
+		send,{up} 
 	}else if(cmd="l"){
-			send,{right} 
+		send,{right} 
 	}else if(cmd="h"){
-			send,{left} 
+		send,{left} 
 	}else if(cmd="b"){
-			send,^{left} 
+		send,^{left} 
 	}else if(cmd="w"){
-			send,^{right} 
+		send,^{right} 
 	}else if(cmd="e"){
-			send,{right}
-			normal("w")
-			send,{left}
+		send,{right}
+		normal("w")
+		send,{left}
 	}else if(cmd="x"){
-			send,{bs} 
+		send,{bs} 
 	}else if(cmd="+x"){
-			send,{del} 
+		send,{del} 
 	}else if(cmd="u"){
-			send,^{z} 
+		send,^{z} 
+	}else if(cmd=":"){
+		Mode=5
+		showMode(Mode)
 	}else if(cmd="s"){
-			normal("x")
-			normal("i")
+		normal("x")
+		normal("i")
 	}
 }
+
 insert(cmd){
 	tooltip
 	send,%cmd%
 }
+Back(){
+	Mode=1
+	showMode(Mode)
+ }
 ::opva::
 suspend
 send,open vim2.ahk{enter}
+suspend
 return
 
+:*:jable::
+suspend
+send,novnovnov
+suspend
+return

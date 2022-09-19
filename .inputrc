@@ -1,0 +1,6 @@
+"\C-l":"clear\n"
+"\C-p": previous-history
+"\C-n": next-history
+"\C-k": kill-line
+"\C-b": history-search-backward
+"\C-f": history-search-forward
