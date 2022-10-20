@@ -91,8 +91,9 @@ augroup maingroup
 	autocmd	Filetype vim iabbrev <buffer> iabf iabbrev <buffer>
 	autocmd	Filetype vim iabbrev <buffer> bf <buffer>
 	autocmd	Filetype vim iabbrev <buffer> fdmk "{{{<cr><cr>}}}<up><bs>
+	"for comment char"
 	autocmd	Filetype vim let b:CMT='"'
-	autocmd	Filetype python let b:CMT='#'
+	autocmd	Filetype {python,sh} let b:CMT='#'
 augroup END
 "}}}
 

@@ -125,6 +125,7 @@ alias ..="cd .."
 alias rm="rm -i"
 alias open="powershell.exe start "
 alias ebrc="vi ~/.bashrc"
+alias psh="powershell.exe"
 
 todo(){
 	cat ~/document/todo
