@@ -57,9 +57,12 @@ set fileencodings=utf-8,gbk
 set enc=utf-8
 set mouse=
 set incsearch
+set nohlsearch
 ""set guifont =Lucida_Sans_Typewriter:h18:cANSI:qDRAFT 
 set sessionoptions+=unix,slash
 set smartcase
+
+set winwidth=80
 "}}}"
 
 "disable key" "{{{
@@ -82,11 +85,13 @@ nnoremap L $
 "autocmd group for different filetype{{{
 augroup maingroup
 	autocmd!
+	autocmd	Filetype {txt,help} setlocal nowrap
 	autocmd	Filetype markdown setlocal smartindent
 	autocmd Filetype markdown onoremap <buffer>il :<c-u>execute "normal! $?^\\s*-\\s?e\r:nohlsearch\rlvg_"<cr>
 	""autocmd	Filetype rust se smartindent
 	autocmd	Filetype sh  nnoremap <buffer> <F5> :w\|!bash %<cr>
 	autocmd	Filetype vim nnoremap <buffer> <F5> :w\|so %<cr>
+	autocmd	Filetype lua nnoremap <buffer> <F5> :w\|luafile %<cr>
 	autocmd	Filetype vim setlocal foldmethod=marker
 	autocmd	Filetype vim iabbrev <buffer> iabf iabbrev <buffer>
 	autocmd	Filetype vim iabbrev <buffer> bf <buffer>
@@ -94,6 +99,7 @@ augroup maingroup
 	"for comment char"
 	autocmd	Filetype vim let b:CMT='"'
 	autocmd	Filetype {python,sh} let b:CMT='#'
+	autocmd	Filetype {lua} let b:CMT='--'
 augroup END
 "}}}
 
@@ -118,6 +124,7 @@ inoremap <c-U> <esc>viwUea
 
 cnoremap <C-p> <Up>
 cnoremap <C-n> <Down>
+cnoreabbr h vertical h
 
 " leader map{{{
  
@@ -131,6 +138,8 @@ vnoremap <leader>( c(<C-r>")<Esc>
 vnoremap <leader>) c(<C-r>")<Esc>
 vnoremap <leader>' c'<C-r>"'<Esc>
 vnoremap <leader>" c"<C-r>""<Esc>
+vnoremap <leader>* c*<C-r>"*<Esc>
+vnoremap <leader>_ c_<C-r>"_<Esc>
 nnoremap <leader>ev :vsplit $MYVIMRC<cr>
 "}}}"
 

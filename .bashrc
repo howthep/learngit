@@ -57,7 +57,7 @@ if [ -n "$force_color_prompt" ]; then
 fi
 
 if [ "$color_prompt" = yes ]; then
-    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;36m\]\A \[\033[01;32m\]\W\[\033[01;32m\]\$\[\033[00;37m\] '
+    PS1='${debian_chroot:+($debian_chroot)}\[\033[01;36m\]\A🌙 \[\033[01;32m\]\W\[\033[01;32m\]\$\[\033[00;37m\] '
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -116,17 +116,23 @@ if ! shopt -oq posix; then
   fi
 fi
 echo Hello $USER
-mcd(){
-	let a=${1:?need argument}
-	mkdir -p $1 && cd $1
-}
 set -o vi
 alias ..="cd .."
 alias rm="rm -i"
 alias open="powershell.exe start "
-alias ebrc="vi ~/.bashrc"
 alias psh="powershell.exe"
+alias c=cat
 
-todo(){
-	cat ~/document/todo
- }
+# for debug string
+export PS4='@$LINENO '
+
+if type "nvim" &> /dev/null;then
+	export VISUAL="nvim"
+else
+	export VISUAL="vi"
+fi
+alias v="$VISUAL"
+alias ebrc="$VISUAL + ~/.bashrc"
+	
+
+source ~/bin/lib
