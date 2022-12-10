@@ -1,5 +1,5 @@
 #singleInstance force
-global Mode=1
+global Mode:=1
 global History:=""
 global Motion:=""
 showMode(mode){
@@ -16,6 +16,8 @@ run wt.exe
 suspend
 return
 
+
+; special key
 i::
 vim("i")
 	return
@@ -37,14 +39,24 @@ vim("i")
 	return
 	lctrl::
 	Suspend
-	Mode=1
 	Suspend,off
-	showMode(Mode)
+	change_mode(1)
 return
 
+
+; all key to vim
 f::
 vim("f")
 return
+	+g::
+	vim("+g")
+	return
+	g::
+	vim("g")
+	return
+	c::
+	vim("c")
+	return
 	t::
 	vim("t")
 	return
@@ -132,25 +144,25 @@ return
 
 vim(cmd){
 	switch Mode{
-		case 1:
-			normal(cmd)
-		case 3:
-			motion(cmd)
-		case 4:
-			mouse(cmd)
-		case 5:
-			command(cmd)
-		case 6:
-			replace(cmd)
-		case 7:
-			view(cmd)
+	case 1:
+		normal(cmd)
+	case 3:
+		motion(cmd)
+	case 4:
+		mouse(cmd)
+	case 5:
+		command(cmd)
+	case 6:
+		replace(cmd)
+	case 7:
+		view(cmd)
 	}
 }
 
 view(cmd){
-send,{shift down}
-normal(cmd)
-send,{shift up}
+	send,{shift down}
+	normal(cmd)
+	send,{shift up}
  }
 motion(cmd){
 	if(cmd!=Motion){
@@ -163,9 +175,14 @@ motion(cmd){
 	}
 	if(Motion="d"){
 		send,{del}
+		back_normal()
+	}else if(Motion="c"){
+		send,{del}
+		change_mode(2)
+		; to insert
 	}
-	back_normal()
 }
+
 whole_line(){
 	send,{home}
 	send,{shift down}
@@ -174,8 +191,12 @@ whole_line(){
 }
 
 command(cmd){
-	History:=History . cmd
-	msgbox , , , %History%,1
+	;History:=History . cmd
+	if(cmd="q"){
+		winclose,A	 
+	}
+	back_normal()
+	;msgbox , , , %History%,1
 }
 
 ; click-as
@@ -184,77 +205,72 @@ command(cmd){
 ; scroll-zx
 mouse(cmd){
 	winGetActiveStats,t,w,h,x,y
-		dh:=4
-		dw:=4
-		gain:=1.6
-		if(cmd="a"){
-			click,down
-			keywait,a
-			click,up
-		}else if(cmd="0"){
-			winclose ,A
-		}else if(cmd="s"){
-			click,right
-		}else if(cmd="m"){
-			smooth_move_mouse("m",dw*gain,dh*gain)
-		}else if(cmd="n"){
-			smooth_move_mouse("n",-dw*gain,dh*gain)
-		}else if(cmd="o"){
-			smooth_move_mouse("o",dw*gain,-dh*gain)
-		}else if(cmd="i"){
-			smooth_move_mouse("i",-dw*gain,-dh*gain)
-		}else if(cmd="j"){
-			smooth_move_mouse("j",0,dh*gain)
-		}else if(cmd="k"){
-			; mousemove,0,-dh*gain,0,R
-			smooth_move_mouse("k",0,-dh*gain)
-		}else if(cmd="h"){
-			smooth_move_mouse("h",-dh*gain,0)
-		}else if(cmd="l"){
-			smooth_move_mouse("l",dh*gain,0)
-		}else if(cmd="u"){
-			mousemove,0,-h/dh,0,R
-		}else if(cmd="d"){
-			mousemove,0,h/dh,0,R
-		}else if(cmd="b"){
-			mousemove,-w/dw,0,0,R
-		}else if(cmd="w"){
-			mousemove,w/dw,0,0,R
-		}else if(cmd="x"){
-			send {click wheeldown}
-		}else if(cmd="^x"){
-			send ^{click wheeldown}
-		}else if(cmd="^z"){
-			send ^{click wheelup}
-		}else if(cmd="^0"){
-			send ^0
-		}else if(cmd="z"){
-			click,wheelup
-		}else if(cmd="q"){
-			back_normal()
-		}
+	dh:=4
+	dw:=4
+	gain:=1.6
+	if(cmd="a"){
+		click,down
+		keywait,a
+		click,up
+	}else if(cmd="0"){
+		winclose ,A
+	}else if(cmd="s"){
+		click,right
+	}else if(cmd="m"){
+		smooth_move_mouse("m",dw*gain,dh*gain)
+	}else if(cmd="n"){
+		smooth_move_mouse("n",-dw*gain,dh*gain)
+	}else if(cmd="o"){
+		smooth_move_mouse("o",dw*gain,-dh*gain)
+	}else if(cmd="i"){
+		smooth_move_mouse("i",-dw*gain,-dh*gain)
+	}else if(cmd="j"){
+		smooth_move_mouse("j",0,dh*gain)
+	}else if(cmd="k"){
+		; mousemove,0,-dh*gain,0,R
+		smooth_move_mouse("k",0,-dh*gain)
+	}else if(cmd="h"){
+		smooth_move_mouse("h",-dh*gain,0)
+	}else if(cmd="l"){
+		smooth_move_mouse("l",dh*gain,0)
+	}else if(cmd="u"){
+		mousemove,0,-h/dh,0,R
+	}else if(cmd="d"){
+		mousemove,0,h/dh,0,R
+	}else if(cmd="b"){
+		mousemove,-w/dw,0,0,R
+	}else if(cmd="w"){
+		mousemove,w/dw,0,0,R
+	}else if(cmd="x"){
+		smooth_scroll("x","down")
+	}else if(cmd="^x"){
+		send ^{click wheeldown}
+	}else if(cmd="^z"){
+		send ^{click wheelup}
+	}else if(cmd="^0"){
+		send ^0
+	}else if(cmd="z"){
+		smooth_scroll("z","up")
+	}else if(cmd="q"){
+		back_normal()
+	}
 }
 
-replace(cmd){
-	send,{del}%cmd% 
-}
 
 normal(cmd){
-	showMode(Mode)  
+	; showMode(Mode)  
 	if(cmd="i"){
 		tooltip
-		Mode=2 
+		Mode:=2 
 		suspend,on
 	}else if(cmd="m"){
-		Mode=4
+		Mode:=4
 		showMode(Mode)
 	}else if(cmd="v"){
-		Mode=7
+		Mode:=7
 		showMode(Mode)
-	}else if(cmd="d"){
-		Mode:=3
-		Motion:="d"
-		showMode(Mode)
+	}else if(cmd="d"||cmd="c"){
+		to_motion(cmd)
 	}else if(cmd="r"){
 		Mode:=6
 		showMode(Mode)
@@ -266,6 +282,10 @@ normal(cmd){
 		send,{right} 
 	}else if(cmd="h"){
 		send,{left} 
+	}else if(cmd="g"){
+		send,{home} 
+	}else if(cmd="+g"){
+		send,{end} 
 	}else if(cmd="b"){
 		send,^{left} 
 	}else if(cmd="w"){
@@ -296,10 +316,24 @@ normal(cmd){
 		normal("i")
 	}
 }
+change_mode(new_mode){
+	Mode:=new_mode
+	showMode(Mode)
+	if (Mode=2){
+		normal("i")
+	}
+}
+
+replace(cmd){
+	send,{del}%cmd% 
+}
+to_motion(cmd){
+	change_mode(3)
+	Motion:=cmd
+}
 
 back_normal(){
-	Mode=1
-	showMode(Mode)
+	change_mode(1)
 }
 smooth_move_mouse(key,x,y){
 	loop{
@@ -309,9 +343,20 @@ smooth_move_mouse(key,x,y){
 		else{
 			break
 		}
-; acceleration
+		; acceleration
 		x*=1.1
 		y*=1.1
+	}
+ }
+smooth_scroll(key,stat){
+	loop{
+		if (getkeystate(key,"P")!=0) {
+			send {click wheel%stat%}
+		} 
+		else{
+			break
+		}
+		sleep 100
 	}
  }
 ::opva::
