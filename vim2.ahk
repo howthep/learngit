@@ -1,3 +1,4 @@
+#singleInstance force
 global Mode=1
 global History:=""
 global Motion:=""
@@ -6,6 +7,7 @@ showMode(mode){
 	tooltip % "Mode="ModeText[Mode],10,-4000
  }
 showMode(Mode)
+setCapsLockState,AlwaysOff
 #usehook
 
 #t::
@@ -16,107 +18,116 @@ return
 
 i::
 vim("i")
-return
-capslock::
-Suspend ; state revert
-setCapsLockState,AlwaysOff
-send,{Ctrl down}
-keywait, capslock ; keep down
-send,{Ctrl up}
-Suspend ; restore state by revertting again
-return
-+capslock::
-Suspend ; state revert
-setCapsLockState,AlwaysOff
-send,{Ctrl down}{shift down}
-keywait, capslock ; keep down
-send,{Ctrl up}{shift up}
-Suspend ; restore state by revertting again
-return
-lctrl::
-Suspend
-Mode=1
-Suspend,off
-showMode(Mode)
+	return
+	capslock::
+	Suspend ; state revert
+	setCapsLockState,AlwaysOff
+	send,{Ctrl down}
+	keywait, capslock ; keep down
+	send,{Ctrl up}
+	Suspend ; restore state by revertting again
+	return
+	+capslock::
+	Suspend ; state revert
+	setCapsLockState,AlwaysOff
+	send,{Ctrl down}{shift down}
+	keywait, capslock ; keep down
+	send,{Ctrl up}{shift up}
+	Suspend ; restore state by revertting again
+	return
+	lctrl::
+	Suspend
+	Mode=1
+	Suspend,off
+	showMode(Mode)
 return
 
-; placehold
 f::
 vim("f")
 return
-t::
-vim("t")
-return
-r::
-vim("r")
-return
-
-; finished
-:::
-vim(":")
-return
-o::
-vim("o")
-return
-a::
-vim("a")
-return
-m::
-vim("m")
-return
-n::
-vim("n")
-return
-d::
-vim("d")
-return
-e::
-vim("e")
-return
-z::
-vim("z")
-return
-v::
-vim("v")
-return
-q::
-vim("q")
-return
-j::
-vim("j")
-return
-k::
-vim("k")
-return
-h::
-vim("h")
-return
-l::
-vim("l")
-return
-w::
-vim("w")
-return
-b::
-vim("b")
-return
-x::
-vim("x")
-return
-+x::
-vim("+x")
-return
-u::
-vim("u")
-return
-+u::
-vim("+u")
-return
-s::
-vim("s")
-return
-+s::
-vim("+s")
+	t::
+	vim("t")
+	return
+	r::
+	vim("r")
+	return
+	:::
+	vim(":")
+	return
+	o::
+	vim("o")
+	return
+	a::
+	vim("a")
+	return
+	m::
+	vim("m")
+	return
+	n::
+	vim("n")
+	return
+	d::
+	vim("d")
+	return
+	e::
+	vim("e")
+	return
+	z::
+	vim("z")
+	return
+	v::
+	vim("v")
+	return
+	q::
+	vim("q")
+	return
+	j::
+	vim("j")
+	return
+	k::
+	vim("k")
+	return
+	h::
+	vim("h")
+	return
+	l::
+	vim("l")
+	return
+	w::
+	vim("w")
+	return
+	b::
+	vim("b")
+	return
+	x::
+	vim("x")
+	return
+	+x::
+	vim("+x")
+	return
+	u::
+	vim("u")
+	return
+	+u::
+	vim("+u")
+	return
+	s::
+	vim("s")
+	return
+	0::
+	vim("0")
+	return
+	+s::
+	vim("+s")
+	return
+	space & x::
+	vim("^x")
+	return
+	space & z::
+	vim("^z")
+	return
+space & 0::
+vim("^0")
 return
 
 vim(cmd){
@@ -173,13 +184,15 @@ command(cmd){
 ; scroll-zx
 mouse(cmd){
 	winGetActiveStats,t,w,h,x,y
-		dh:=5
-		dw:=dh*w/h
-		gain:=1.8
+		dh:=4
+		dw:=4
+		gain:=1.6
 		if(cmd="a"){
 			click,down
-				keywait,a
-				click,up
+			keywait,a
+			click,up
+		}else if(cmd="0"){
+			winclose ,A
 		}else if(cmd="s"){
 			click,right
 		}else if(cmd="m"){
@@ -208,7 +221,13 @@ mouse(cmd){
 		}else if(cmd="w"){
 			mousemove,w/dw,0,0,R
 		}else if(cmd="x"){
-			click,wheeldown
+			send {click wheeldown}
+		}else if(cmd="^x"){
+			send ^{click wheeldown}
+		}else if(cmd="^z"){
+			send ^{click wheelup}
+		}else if(cmd="^0"){
+			send ^0
 		}else if(cmd="z"){
 			click,wheelup
 		}else if(cmd="q"){
@@ -278,13 +297,9 @@ normal(cmd){
 	}
 }
 
-insert(cmd){
-	tooltip
-		send,%cmd%
-}
 back_normal(){
 	Mode=1
-		showMode(Mode)
+	showMode(Mode)
 }
 smooth_move_mouse(key,x,y){
 	loop{
@@ -294,6 +309,9 @@ smooth_move_mouse(key,x,y){
 		else{
 			break
 		}
+; acceleration
+		x*=1.1
+		y*=1.1
 	}
  }
 ::opva::

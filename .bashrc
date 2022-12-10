@@ -118,10 +118,14 @@ fi
 echo Hello $USER
 set -o vi
 alias ..="cd .."
+alias -- -="cd -"
 alias rm="rm -i"
-alias open="powershell.exe start "
-alias psh="powershell.exe"
+# alias open="powershell.exe start "
+# bash is suitable for combining command, not for computing data
+# So you need learn to python and bash 
+# when both combined, you are the almighty
 alias c=cat
+alias py=python3
 
 # for debug string
 export PS4='@$LINENO '
@@ -135,4 +139,4 @@ alias v="$VISUAL"
 alias ebrc="$VISUAL + ~/.bashrc"
 	
 
-source ~/bin/lib
+[ -f ~/bin/lib ]&&source ~/bin/lib

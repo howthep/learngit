@@ -1,0 +1,44 @@
+#!/bin/bash
+_doc_base_cmd (){
+ for fname ;do
+	 ! test -f $fname&&continue
+	 cname=${fname%.*} #no extname
+	 bname=${cname##*/} #no pathname
+	 #echo  $bname
+	 eval "$bname(){
+	 local path=$fname
+	 case "\$1" in
+		 -e)
+			 $VISUAL + \$path
+			 ;;
+		 *)
+			 cat \$path
+			 ;;
+	 esac
+  }"
+ done
+ }
+if [ -d ~/document/normal ];then
+	_doc_base_cmd ~/document/normal/*
+fi
+
+
+mcd(){
+	if [ -n "$1" ];then
+		mkdir -p $1 && cd $1
+	else
+		echo need an argument
+		return 1
+		#exit 1
+		# don't use exit, it will exit current shell
+	fi
+}
+if [ -n "$WSL_DISTRO_NAME " ];then
+alias psh="powershell.exe"
+open(){
+	local OPEN="powershell.exe start "
+	for i in "$@";do
+		eval "$OPEN $i"
+	done
+ }
+fi
