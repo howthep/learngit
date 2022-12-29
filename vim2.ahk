@@ -1,10 +1,11 @@
 #singleInstance force
 global Mode:=1
-global History:=""
+global History:="init"
+global Read:=""
 global Motion:=""
-global current_title:=""
+global cReplace:=0
+global ModeText:=["Normal","Insert","Motion","Mouse","Command","Replace","View"]
 showMode(){
-	ModeText:=["Normal","Insert","Motion","Mouse","Command","Replace","View"]
 	tooltip % "Mode="ModeText[Mode],10,-4000
  }
 showMode()
@@ -12,8 +13,13 @@ setCapsLockState,AlwaysOff
 #usehook
 
 ; ==============================================================================
+; vimgrep /\v^\a+\(cmd/j %
+; ==============================================================================
 ; TODO
-; nothing
+; make a standard for cmd wait a key, such as f,t,gu,q
+; how can I easily know whether a cmd is move
+; mouse mode rapid move, one resolution: divide screen to 5x5 square,move to 
+; center of square by wubi arrange
 ; ==============================================================================
 
 ; special key
@@ -63,11 +69,23 @@ return
 i::
 vim("i")
 return
+	space::
+	vim("space")
+	return
+	enter::
+	vim("cr")
+	return
+	.::
+	vim(".")
+	return
 	?::
 	vim("?")
 	return
 	f::
 	vim("f")
+	return
+	y::
+	vim("y")
 	return
 	p::
 	vim("p")
@@ -86,6 +104,9 @@ return
 	return
 	r::
 	vim("r")
+	return
+	+r::
+	vim("+r")
 	return
 	:::
 	vim(":")
@@ -184,13 +205,28 @@ return
 	return
 ; space leader
 
+DEBUG(inpu){
+	tip_show(inpu,10,50,3)
+}
 
 command(cmd){
-	;History:=History . cmd
-	if(cmd="q"){
-		winclose,A	 
+	if(cmd="cr"){
+		if Read in q,qu,qui,quit
+		{
+			winclose,A	 
+		}
+		else if Read in debug,deb
+		{
+			DEBUG(History)
+		}
+		Read:=""
+		back_normal()
 	}
-	back_normal()
+	else{
+		cmd:=nonprint_conv(cmd)
+		Read:=Read . cmd
+	}
+	tip_show(Read,10,2000,2)
 	;msgbox , , , %History%,1
 }
 
@@ -198,6 +234,7 @@ command(cmd){
 ; fine tone-hjklionm
 ; wide move-udwb
 ; scroll-zx
+
 mouse(cmd){
 	winGetActiveStats,t,w,h,x,y
 	dh:=3
@@ -253,7 +290,6 @@ mouse(cmd){
 	}
 }
 
-
 motion(cmd){
 	if(cmd!=Motion){
 		keywait,shift
@@ -266,18 +302,31 @@ motion(cmd){
 	if(Motion="d"){
 		send,^x
 		back_normal()
+	}else if(Motion="y"){
+		send,^c
+		back_normal()
 	}else if(Motion="c"){
-		send,{del}
+		send,^x
 		change_mode(2)
 		; to insert
 	}
 }
 
 normal(cmd){
+	curmode:=Mode
 	if(cmd="i"){
 		tooltip
 		Mode:=2 
+		setnumlockstate, on
 		suspend,on
+	}else if(cmd="nop"){
+		return
+	}else if(cmd="space"){
+		send,{space}
+	}else if(cmd="cr"){
+		send,{enter}
+	}else if(cmd="."){
+		normal(History)
 	}else if(cmd="?"){
 		helpinfo=
 		(LTrim 
@@ -299,8 +348,15 @@ normal(cmd){
 		showMode()
 	}else if(cmd="p"){
 		send,^v
-	}else if(cmd="d"||cmd="c"){
+	}else if(cmd="d"||cmd="c"||cmd="y"){
 		to_motion(cmd)
+		if(ModeText[curmode]="View"){
+			motion("nop")
+		}
+	}else if(cmd="+r"){
+		cReplace:=1
+		Mode:=6
+		showMode()
 	}else if(cmd="r"){
 		Mode:=6
 		showMode()
@@ -310,12 +366,7 @@ normal(cmd){
 		send,{pgup}
 	}else if(cmd="j"){
 		if(process_name()="msedge.exe"){
-			wingetactivetitle,title ;
-			if( current_title!=title && regexmatch(title,".*\.pdf") ){
-				send,{F6 3} ; focus on main page
-				;msgbox,,,% title,1
-			}
-			current_title:=title
+			edge_pdf_focus()
 		}
 		send,{Down}
 	}else if(cmd="k"){
@@ -359,17 +410,28 @@ normal(cmd){
 		normal("+x")
 		normal("i")
 	}
+	if (cmd!="."&&cmd!=":"){
+		History:=cmd
+	}
 }
 
 ; ============================================================
 ; below code is small functions
 ; ============================================================
+nonprint_conv(cmd){
+	if(cmd="space"){
+		cmd:=" "
+	}
+	return cmd
+}
 
 vim(cmd){
 	showMode()
 	switch Mode{
 	case 1:
 		normal(cmd)
+	case 2:
+		normal("i")
 	case 3:
 		motion(cmd)
 	case 4:
@@ -394,19 +456,29 @@ view(cmd){
 	send,{shift down}
 	normal(cmd)
 	send,{shift up}
- }
+	if cmd not in j,k,h,l,w,b,e,c,s
+		back_normal()
+}
 
 change_mode(new_mode){
 	Mode:=new_mode
 	showMode()
 	if (Mode=2){
 		normal("i")
+	}else if (Mode=1){
+		setnumlockstate, off
+		cReplace:=0
 	}
 }
 
 replace(cmd){
+	cmd:=nonprint_conv(cmd)
 	send,{del}%cmd% 
+	if(cReplace=0){
+		back_normal()
+	}
 }
+
 
 to_motion(cmd){
 	change_mode(3)
@@ -437,8 +509,9 @@ alt(){
 	winget,name,processname,A
 	key:=""
 	if (name="msedge.exe" ){
-		input,key,l1 t0.4 ,{LALT}
+		input,key,l1 t0.3 ,{LALT}
 		if(asc(key)=0){
+			edge_pdf_focus()
 			return
 		}
 		if(key="`t") {
@@ -451,14 +524,31 @@ alt(){
 	keywait, lalt
 	send,{alt up}
 }
+edge_pdf_focus(){
+	static current_title:=""
+	wingetactivetitle,title ;
+	if( current_title!=title && regexmatch(title,".*\.pdf") ){
+		send,{F6}+{F6} ; focus on main page
+			;msgbox,,,% title,1
+	}
+	current_title:=title
+}
+tip_show(arg,x:=10,y:=-2000,num:=1){
+	tooltip , % arg,x,y,num
+}
 ::opva::
 suspend
 send,open vim2.ahk{enter}
 suspend
 return
 
-:*:jable::
+::mytele::
 suspend
-send,novnovnov
+send,15965394977
+suspend
+return
+::myemail::
+suspend
+send,roseupram@163.com
 suspend
 return
