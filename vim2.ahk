@@ -1,25 +1,40 @@
 #singleInstance force
+#usehook
+
 global Mode:=1
 global History:="init"
-global Read:=""
 global Motion:=""
+global Count:=""
+global Leader:=""
 global cReplace:=0
 global ModeText:=["Normal","Insert","Motion","Mouse","Command","Replace","View"]
-showMode(){
-	tooltip % "Mode="ModeText[Mode],10,-4000
- }
+
 showMode()
 setCapsLockState,AlwaysOff
-#usehook
+loop 26{
+	if(A_index<=10){
+		hotkey,% A_index-1,vim
+	}
+	asciii:=64+A_index
+	char:=chr(asciii)
+	hotkey,% char,vim
+	hotkey,% "+"char,vim
+}
+hotks:=["$","^","space","esc","enter",".",":","?"]
+for index,hotk in hotks
+	hotkey,%hotk%,vim
 
 ; ==============================================================================
 ; vimgrep /\v^\a+\(cmd/j %
 ; ==============================================================================
 ; TODO
-; make a standard for cmd wait a key, such as f,t,gu,q
-; how can I easily know whether a cmd is move
-; mouse mode rapid move, one resolution: divide screen to 5x5 square,move to 
-; center of square by wubi arrange
+; make a standard way for cmd to wait a key, such as f,t,gu,q
+; mouse mode rapid move, one resolution: divide screen to 10x10 square,
+; or I can use image edge detection to get all button
+; a clipboard manager, because win+v don't word
+; detect whether is editting text 
+; maybe I should add modifier parameter to normal(key,modifier:="")
+; modifier=[ctrl,shift,alt,win]
 ; ==============================================================================
 
 ; special key
@@ -31,6 +46,7 @@ capslock::
 	send,{Ctrl up}
 	Suspend ; restore state by revertting again
 	return
+
 	+capslock::
 	Suspend ; state revert
 	setCapsLockState,AlwaysOff
@@ -39,17 +55,18 @@ capslock::
 	send,{Ctrl up}{shift up}
 	Suspend ; restore state by revertting again
 	return
-	lalt::
+
+	alt::
 	suspend
 	alt()
 	suspend
 	return
-	lalt & left::
+	alt & left::
 	suspend
 	send,!{left}
 	suspend
 	return
-	lalt & right::
+	alt & right::
 	suspend
 	send,!{right}
 	suspend
@@ -59,131 +76,11 @@ capslock::
 	Suspend,off
 	change_mode(1)
 	return
-#t::
+	#t::
 	suspend
 	run wt.exe
 	suspend
 return
-
-
-i::
-vim("i")
-return
-	space::
-	vim("space")
-	return
-	enter::
-	vim("cr")
-	return
-	.::
-	vim(".")
-	return
-	?::
-	vim("?")
-	return
-	f::
-	vim("f")
-	return
-	y::
-	vim("y")
-	return
-	p::
-	vim("p")
-	return
-	+g::
-	vim("+g")
-	return
-	g::
-	vim("g")
-	return
-	c::
-	vim("c")
-	return
-	t::
-	vim("t")
-	return
-	r::
-	vim("r")
-	return
-	+r::
-	vim("+r")
-	return
-	:::
-	vim(":")
-	return
-	o::
-	vim("o")
-	return
-	+o::
-	vim("+o")
-	return
-	a::
-	vim("a")
-	return
-	+a::
-	vim("+a")
-	return
-	m::
-	vim("m")
-	return
-	n::
-	vim("n")
-	return
-	d::
-	vim("d")
-	return
-	e::
-	vim("e")
-	return
-	z::
-	vim("z")
-	return
-	v::
-	vim("v")
-	return
-	q::
-	vim("q")
-	return
-	j::
-	vim("j")
-	return
-	k::
-	vim("k")
-	return
-	h::
-	vim("h")
-	return
-	l::
-	vim("l")
-	return
-	w::
-	vim("w")
-	return
-	b::
-	vim("b")
-	return
-	x::
-	vim("x")
-	return
-	+x::
-	vim("+x")
-	return
-	u::
-	vim("u")
-	return
-	+u::
-	vim("+u")
-	return
-	s::
-	vim("s")
-	return
-	0::
-	vim("0")
-	return
-	+s::
-	vim("+s")
-	return
-; all key to vim
 
 space & x::
 vim("^x")
@@ -205,19 +102,39 @@ return
 	return
 ; space leader
 
-DEBUG(inpu){
-	tip_show(inpu,10,50,3)
+DEBUG(arg){
+	tip_show(arg,10,50,3)
 }
 
 command(cmd){
-	if(cmd="cr"){
-		if Read in q,qu,qui,quit
-		{
+	static Read:=""
+	static simplemap:={bb:"{browser_back}",bf:"{browser_forward}",w:"^s"
+		,wl:"#{left}",wr:"#{right}"
+		,vm:"{vkad}",vu:"{vkaf 2}",vd:"{vkae 2}" }
+	DEBUG("")
+	if(cmd="enter"){
+		; else if Read in vu 
+		; { 
+			; soundset +5 
+		; } 
+		if Read in q,qu,qui,quit 
 			winclose,A	 
-		}
-		else if Read in debug,deb
+		else if Read in tp 
 		{
-			DEBUG(History)
+			stp:=180
+			winget,t,transparent,A
+			; msgbox,,,% t,1 
+			if strlen(t)
+				winset,transparent,off,A
+			else
+				winset,transparent,% stp,A
+		} else if Read in debug,deb 
+			DEBUG(Count)
+		else{
+			mapkey:=objrawget(simplemap,Read)
+			if(mapkey!=""){
+				press(mapkey)
+			}
 		}
 		Read:=""
 		back_normal()
@@ -226,7 +143,7 @@ command(cmd){
 		cmd:=nonprint_conv(cmd)
 		Read:=Read . cmd
 	}
-	tip_show(Read,10,2000,2)
+	tip_show(Read,10,9000,2)
 	;msgbox , , , %History%,1
 }
 
@@ -240,14 +157,18 @@ mouse(cmd){
 	dh:=3
 	dw:=4
 	gain:=1.6
-	if(cmd="a"){
+	if(cmd="a"&&Count<=1){
 		click,down
 		keywait,a
 		click,up
+	}else if(cmd="a"&&Count>1){
+		click, % Count
+		Count:=""
+		footer(Count)
 	}else if(cmd="+a"){
 		click
 		change_mode(1)
-	}else if(cmd="0"){
+	}else if(cmd="g"){
 		winclose ,A
 	}else if(cmd="s"){
 		click,right
@@ -277,11 +198,11 @@ mouse(cmd){
 		mousemove,w/dw,0,0,R
 	}else if(cmd="x"){
 		smooth_scroll("x","down")
-	}else if(cmd="^x"){
+	}else if(cmd="space & x"){
 		send ^{click wheeldown}
-	}else if(cmd="^z"){
+	}else if(cmd="space & z"){
 		send ^{click wheelup}
-	}else if(cmd="^0"){
+	}else if(cmd="space & 0"){
 		send ^0
 	}else if(cmd="z"){
 		smooth_scroll("z","up")
@@ -295,6 +216,11 @@ motion(cmd){
 		keywait,shift
 		send,{shift down}
 		normal(cmd)	 
+		if(process_name()="WINWORD.EXE"){
+			if(cmd="$"){
+				send,{left}
+			}
+		}
 		send,{shift up}
 	}else{
 		whole_line()
@@ -313,18 +239,68 @@ motion(cmd){
 }
 
 normal(cmd){
-	curmode:=Mode
-	if(cmd="i"){
+	listlines off
+	maptable:={k:"{up}",l:"{right}",h:"{left}",w:"^{right}",b:"^{left}"
+		 ,"space & d":"{pgdn}","space & u":"{pgup}",g:"{home}","+g":"{end}"
+		 ,p:"^v"
+		 ,x:"{bs}","+x":"{del}",u:"^z","+u":"^y"
+		 ,esc:"",space:"{space}",enter:"{enter}","$":"{end}","^":"{home}"}
+
+	mapkey:=objrawget(maptable,cmd)
+	listlines on
+	if(mapkey!=""){
+		press(mapkey)
+	}else if(cmd="j"){
+		if(process_name()="msedge.exe"){
+			edge_pdf_focus()
+		}
+		send,{Down}
+	}else if(cmd="i"){
 		tooltip
 		Mode:=2 
 		setnumlockstate, on
 		suspend,on
+	}else if(cmd="+i"){
+		send,{home}
+		normal("i")
+	}else if(cmd="+a"){
+		send,{end}
+		normal("i")
 	}else if(cmd="nop"){
 		return
-	}else if(cmd="space"){
-		send,{space}
-	}else if(cmd="cr"){
-		send,{enter}
+	}else if(cmd="d"||cmd="c"||cmd="y"){
+		to_motion(cmd)
+	}else if(cmd="+d"){
+		normal("d")
+		motion("$")
+	}else if(cmd="+c"){
+		normal("c")
+		motion("$")
+	}else if(cmd="+r"){
+		cReplace:=1
+		Mode:=6
+		showMode()
+	}else if(cmd="r"){
+		Mode:=6
+		showMode()
+	}else if(cmd="e"){
+		send,{right}
+		normal("w")
+		send,{left}
+	}else if(cmd="o"){
+		send,{end}{enter}
+		normal("i")
+	}else if(cmd="+o"){
+		send,{home}{enter}{up}
+		normal("i")
+	}else if(cmd=":"){
+		change_mode(5)
+	}else if(cmd="s"){
+		normal("x")
+		normal("i")
+	}else if(cmd="+s"){
+		normal("+x")
+		normal("i")
 	}else if(cmd="."){
 		normal(History)
 	}else if(cmd="?"){
@@ -339,94 +315,58 @@ normal(cmd){
 		)
 		msgbox,0x40040,Help, % helpinfo
 	}else if(cmd="f"){
-		msgbox,to char
+		; normal("yy")
+		; wait a target char
+		return
 	}else if(cmd="m"){
 		Mode:=4
 		showMode()
 	}else if(cmd="v"){
 		Mode:=7
 		showMode()
-	}else if(cmd="p"){
-		send,^v
-	}else if(cmd="d"||cmd="c"||cmd="y"){
-		to_motion(cmd)
-		if(ModeText[curmode]="View"){
-			motion("nop")
-		}
-	}else if(cmd="+r"){
-		cReplace:=1
-		Mode:=6
-		showMode()
-	}else if(cmd="r"){
-		Mode:=6
-		showMode()
-	}else if(cmd="^d"){
-		send,{pgdn}
-	}else if(cmd="^u"){
-		send,{pgup}
-	}else if(cmd="j"){
-		if(process_name()="msedge.exe"){
-			edge_pdf_focus()
-		}
-		send,{Down}
-	}else if(cmd="k"){
-		send,{up} 
-	}else if(cmd="l"){
-		send,{right} 
-	}else if(cmd="h"){
-		send,{left} 
-	}else if(cmd="g"){
-		send,{home} 
-	}else if(cmd="+g"){
-		send,{end} 
-	}else if(cmd="b"){
-		send,^{left} 
-	}else if(cmd="w"){
-		send,^{right} 
-	}else if(cmd="e"){
-		send,{right}
-		normal("w")
-		send,{left}
-	}else if(cmd="o"){
-		send,{end}{enter}
-		normal("i")
-	}else if(cmd="+o"){
-		send,{home}{enter}{up}
-		normal("i")
-	}else if(cmd="x"){
-		send,{bs} 
-	}else if(cmd="+x"){
-		send,{del} 
-	}else if(cmd="u"){
-		send,^{z} 
-	}else if(cmd="+u"){
-		send,^{y} 
-	}else if(cmd=":"){
-		change_mode(5)
-	}else if(cmd="s"){
-		normal("x")
-		normal("i")
-	}else if(cmd="+s"){
-		normal("+x")
-		normal("i")
 	}
+	listlines off
 	if (cmd!="."&&cmd!=":"){
 		History:=cmd
 	}
+	listlines on
 }
 
 ; ============================================================
 ; below code is small functions
 ; ============================================================
+press(arg){
+	if arg=""
+		return
+	send,% arg
+}
 nonprint_conv(cmd){
 	if(cmd="space"){
 		cmd:=" "
+	}else if(cmd ~= "\+[a-z]"){
+		cmd:=substr(cmd,2)
+		; stringupper,cmd,cmd
 	}
 	return cmd
 }
 
-vim(cmd){
+vim(cmd:=""){
+	listlines off
+	cmd:=A_thishotkey
+	stringlower,cmd,cmd
+	if(cmd>=0&&cmd<=10){
+		Count:=Count . cmd
+		Count:=Ltrim(Count,"0")
+	}
+	footer(Count)
+	if(cmd="esc"&&Count>=1){
+		Count:=""
+		footer(Count)
+		return 
+	}
+	; msgbox,,,% cmd,1
 	showMode()
+	listlines on
 	switch Mode{
 	case 1:
 		normal(cmd)
@@ -453,11 +393,18 @@ whole_line(){
 }
 
 view(cmd){
-	send,{shift down}
-	normal(cmd)
-	send,{shift up}
-	if cmd not in j,k,h,l,w,b,e,c,s
+	if(cmd="+g"){
+		send,+{end}
+	}else{
+		send,{shift down}
+		normal(cmd)
+		send,{shift up}
+	}
+	if cmd not in j,k,h,l,w,b,e,c,s,g,+g
+	{
+		; msgbox,,,% cmd, .5
 		back_normal()
+	}
 }
 
 change_mode(new_mode){
@@ -481,19 +428,30 @@ replace(cmd){
 
 
 to_motion(cmd){
-	change_mode(3)
+	curmode:=Mode
 	Motion:=cmd
+	if(ModeText[curmode]="View"){
+		; no waiting a move
+		motion("nop")
+	}else{
+		change_mode(3)
+	}
 }
 
 back_normal(){
 	change_mode(1)
 }
 smooth_move_mouse(key,x,y){
+	static running:=0
+	if running 
+		return
+	running:=1
 	while (getkeystate(key,"P")!=0) {
 		mousemove,x,y,0,R
 		x*=1.1
 		y*=1.1
 	}
+	running:=0
 }
 smooth_scroll(key,stat){
 	while (getkeystate(key,"P")!=0) {
@@ -502,8 +460,10 @@ smooth_scroll(key,stat){
 	}
  }
 process_name(){
+	listlines off
 	winget,name,processname,A
 	return name
+	listlines on
 }
 alt(){
 	winget,name,processname,A
@@ -533,8 +493,14 @@ edge_pdf_focus(){
 	}
 	current_title:=title
 }
+footer(arg){
+	tip_show(arg,10,9000,2)
+}
 tip_show(arg,x:=10,y:=-2000,num:=1){
 	tooltip , % arg,x,y,num
+}
+showMode(){
+	tooltip % "Mode="ModeText[Mode],10,-4000
 }
 ::opva::
 suspend
