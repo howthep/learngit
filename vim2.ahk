@@ -3,38 +3,12 @@
 #include %A_scriptDir%/lib.ahk
 #singleInstance force
 #usehook
-listlines off
 
 global Mode:=1
-global Motion:=""
-global Count:=""
-global Leader:=""
-global cReplace:=0
+global leaders:=[]
 global ModeText:=["Normal","Insert","Motion","Mouse","Command","Replace","View"]
 global ModeNum:=[]
-
-change_mode(1)
-setCapsLockState,AlwaysOff
-loop 26{
-	if(A_index<=10){
-		hotkey,% A_index-1,vim
-		hotkey,% "space & " (A_index-1),vim
-	}
-	asciii:=64+A_index
-	char:=chr(asciii)
-	hotkey,% char,vim
-	hotkey,% "+"char,vim
-	hotkey,% "space & "char,vim
-	if(A_index<=ModeText.length())
-	{
-		ModeNum[ModeText[A_index]]:=A_index
-	}
-}
-hotks:=["$","^","space","tab","+","_","-","@","esc","bs","enter",";",".",":","?"]
-for index,hotk in hotks
-{
-	hotkey,%hotk%,vim
-}
+init()
 
 ; ==============================================================================
 ; vimgrep /\v^\a+\(cmd/j %
@@ -82,13 +56,13 @@ DEBUG(arg){
 	tip_show(arg,10,50,3)
 }
 
-readline(cmd){
+rlcmd(cmd){
 	static Read:=""
 	if(cmd="enter"){
 		command(Read)
 		; print(Read,1) 
 		Read:=""
-		back_normal()
+		tip_show("",10,9000,2)
 		return 
 	}else if(cmd="clear" || cmd="space & u"){
 		Read:=""
@@ -99,6 +73,7 @@ readline(cmd){
 		Read:=Read . cmd
 	}
 	tip_show(strlen(Read)?Read:" ",10,9000,2)
+	return "rl"
 }
 command(cmd){
 	static simplemap:={bb:"{browser_back}",bf:"{browser_forward}",w:"^s"
@@ -114,6 +89,9 @@ command(cmd){
 		; } 
 	if(regexmatch(cmd,"^tp\s*")){
 		tpcmd(cmd)
+	}else if(regexmatch(cmd,"^top\s*")){
+		arr=split(cmd," ")
+		topcmd(arr[2])
 	}else if cmd in debug,deb 
 	{
 		a:="Mode"
@@ -125,9 +103,15 @@ command(cmd){
 		press(simplemap[cmd])
 	}
 }
+topcmd(num){
+	winset,Alwaysontop,%num%,A
+}
 
 
-mouse(cmd){
+mcmd(cmd){
+	if(cmd="q"){
+		return
+		}
 	; click-as
 	; fine tone-hjklionm
 	; wide move-udwb
@@ -136,17 +120,13 @@ mouse(cmd){
 	dh:=3
 	dw:=4
 	gain:=1.6
-	if(cmd="a"&&Count<=1){
+	if(cmd="a"){
 		click,down
 		keywait,a
 		click,up
-	}else if(cmd="a"&&Count>1){
-		click, % Count
-		Count:=""
-		footer(Count)
 	}else if(cmd="+a"){
 		click
-		change_mode(1)
+		return
 	}else if(cmd="g"){
 		winclose ,A
 	}else if(cmd="s"){
@@ -185,210 +165,154 @@ mouse(cmd){
 		smooth_scroll("z","up")
 	}else if(cmd="enter"){
 		send,{enter}
-	}else if(cmd="q"){
-		back_normal()
 	}else if(cmd~="space & [a-z0-9]"){
 		k:=substr(cmd,strlen(cmd))
 		; print(k) 
 		press("^" k)
 	}
+	return "m"
+}
+dcmd(cmd){
+	static ld:=""
+	if (cmd="d"){
+		if(process_name() ~= "godot"){
+			press("^x")
+		} else{
+		press("{home}" select("{end}") "^x")
+		}
+		return
+	}
+	fn:="normal"
+	if(ld){
+		fn:=ld "cmd"
+		ld:=""
+	}
+	res:=%fn%(cmd,true)
+	; print(res[1],1) 
+	if(res[1]="move"){
+		press(select(res[2]) "^x")
+	}else if(res[1]="leader"){
+		ld:=res[2]
+		return "d"
+	}
+}
+ccmd(cmd){
+	res:=dcmd(cmd)
+	if(res){
+		return res
+	}
+	normal("i")
+}
+rcmd(cmd){
+	if(cmd!="esc"){
+		press("{ins}" cmd "{ins}")
+		return "r"
+	}
+}
+gcmd(cmd,only_text:=false){
+	static map:={g:"{home}"}
+	if(only_text){
+		return ["move",map[cmd]]
+	}
+	move(map[cmd])
+}
+vcmd(cmd){
+	static map:={x:"^x",y:"^c"}
+	k:=map[cmd]
+	if(k){
+		press(k)
+		return
+	}
+	res:=normal(cmd,true)
+	type:=res[1]
+	if(res[1]="move"){
+		move(select(res[2]))
+		return "v"
+	}else if(type="edit" ||type="eval"){
+		%type%(res[2])
+	}
+}
+select(cmd){
+	return "{shift down}" cmd "{shift up}"
 }
 
-motion(cmd){
-	static map:={d:"^x",y:"^c",c:"^x"}
-	static temp:=""
-	if(cmd!=Motion){
-		keywait,shift
-		send,{shift down}
-		if(cmd="f"){
-			cmd.=",c"
+normal(cmd,only_text:=false){
+	static maps:=[{name:"move"
+		,j:"{down}",k:"{up}",h:"{left}",l:"{right}","+g":"{end}"
+		,"$":"{end}","^":"{home}",w:"^{right}",b:"^{left}"}
+	,{name:"edit"
+	,p:"^v",tab:"{tab}"
+	,"-":"!{down}","_":"!{up}","+":"^d"
+	,x:"+{left}^x","+x":"+{right}^x",u:"^z","+u":"^y",enter:"{enter}"}
+	,{name:"eval"
+	,"+d":"d,$","+a":"$,i","+i":"^,i","+c":"c,$"
+	,"o":"$,enter,i"
+	,s:"x,i","+s":"+x,i"}
+	,{name:"leader"
+	,d:"d",c:"c",r:"r",g:"g",m:"m",v:"v",":":"rl"}
+	,{name:"change_mode",i:2}] 
+	for i,map in maps {
+		op:=map[cmd]
+		if(op){
+			fn:=map.name
+			if(only_text){
+				res:=[fn,op]
+				return res
+			}
+			%fn%(op)
 		}
-		execute(cmd)	 
-		exename:=process_name()
-		if(exename="WINWORD.EXE"){
-			if(cmd="$"){
-				send,{left}
+	}
+}
+eval(cmd){
+	for i,scmd in split(cmd,","){
+		if(leaders.length()>0){
+			last:=leaders[leaders.length()]
+			wait:=%last%cmd(scmd)
+			; print(wait "," last) 
+			if(wait!=last){
+				leaders.pop()
+			}
+			if(mode=2){
+				tip_show("")
+			}else{
+				tip_show((leaders.length()<=0?"Normal":"Leader:" leaders[leaders.length()]))
 			}
 		}
-		send,{shift up}
-	}else{
-		whole_line()
-	}
-	if (map[Motion]){
-		press(map[Motion])
-	}else if Motion in u,+u
-	{
-		save:=clipboard
-		clipboard:=""
-		press("^c")
-		clipwait
-		copied:=clipboard
-		if(Motion="u"){
-		stringupper,copied,copied
-		}else {
-		stringlower,copied,copied
+		else{
+			tip_show("Normal")
+			normal(scmd)
 		}
-		clipboard:=copied
-		press("^v")
-		sleep,2
-		clipboard:=save
-	}
-	if(Motion="c"){
-		change_mode(2) ; to insert
-	}
-	else{
-		back_normal()
 	}
 }
 
-normal(cmd){
-	static maptable:={k:"{up}",l:"{right}",h:"{left}",w:"^{right}",b:"^{left}"
-		 ,"space & d":"{pgdn}","space & u":"{pgup}","+g":"{end}"
-		 ,tab:"{tab}"
-		 ,p:"^v",copy:"^c",cut:"^x"
-		 ,x:"{bs}","+x":"{del}",u:"^z","+u":"^y"
-		 ,esc:"",space:"{space}",enter:"{enter}","$":"{end}","^":"{home}"}
-	static normap:={s:"x,i","+s":"+x,i"
-		,e:"l,w,h"
-		,"+i":"^,i","+a":"$,i","a":"l,i",o:"$,enter,i","+o":"k,$,enter,i"}
-	static lastcmd:="init"
-	mapkey:=objrawget(maptable,cmd)
-	norkey:=objrawget(normap,cmd)
-	if(process_name() ~= "godot" ){
-		godotmap:={"+":"^d","-":"!{down}","_":"!{up}"}
-		if(mapkey=""){
-			mapkey:=godotmap[cmd]
-		}
-		}
-	if(mapkey!=""){
-		press(mapkey)
-	}else if(norkey!=""){
-		arr:=split(norkey,",")
-		for i,value in arr 
-		{
-			normal(value)
-		}
-	}else if(cmd = "j"){
-		if(process_name()="msedge.exe"){
-			edge_pdf_focus()
-		}
-		send,{Down}
-	}else if(cmd="i"){
-		change_mode(2)
-	}else if(cmd="nop"){
-		return
-	}else if cmd in d,c,y
-	{
-		to_motion(cmd)
-	}else if(cmd ~= "^\+(d|c|y)$"){
-		execute(substr(cmd,2) ",$")
-	}else if(cmd="+r"){
-		cReplace:=1
-		normal("r")
-	}else if(cmd=";"){
-		fcmd()
-	}else if(cmd="r"){
-		change_mode(6)
-	}else if(cmd=":"){
-		change_mode(5)
-	}else if(cmd="."){
-		normal(lastcmd)
-	}else if(cmd="?"){
-		helpinfo=
-		(LTrim 
-		 i:to insert mode, lctrl:to normal mode, m:to mouse mode
-		 j:up, k:down, h:left, l:right
-		 w:next word, b:previous word, e:next end of word
-		 d:delete after a move, c:like press d and i 
-		 x:delete char before cursor, X:delete char after cursor,s/S:x/X and i
-		 o:add new line below and press i, O:add new line obove and press i
-		)
-		msgbox,0x40040,Help, % helpinfo
-	}else if cmd in f,g
-	{
-		Leader:=cmd
-		return
-	}else if(cmd="m"){
-		change_mode(ModeNum["Mouse"])
-	}else if(cmd="v"){
-		change_mode(ModeNum["View"])
-	}
-	if !(cmd ~= "^(\.|:|enter)$"){
-		lastcmd:=cmd
-	}
+vim(cmd:=""){
+	cmd:=(cmd=""?A_thishotkey:cmd)
+	stringlower,cmd,cmd
+	eval(cmd)
 }
 
 ; ============================================================
 ; below code is small functions
 ; ============================================================
 hk2str(cmd){
-	if(cmd="space"){
-		cmd:=" "
-	}else if(cmd="esc"){
-		cmd:=""
-	}else if(cmd ~= "^\+[a-z]$"){
+	stringlower,cmd,cmd
+	if(cmd ~= "^\+[a-z]$"){
 		cmd:=substr(cmd,2)
 		stringupper,cmd,cmd
+	}else if (cmd="space"){
+		cmd:=" "
 	}
 	return cmd
-}
-fcmd(cmd:=""){
-	static last:=""
-	cmd:=(cmd=""?last:cmd)
-	last:=cmd
-	setkeydelay,1
-	c:=clipboard
-	normal("+y")
-	times:=Instr(clipboard,cmd,true)
-	send,{left}{right %times%}
-	setkeydelay,10
-	clipboard:=c
-	; clipboard:="heko" 
-}
-gcmd(cmd:=""){
-	static keymap:={g:"{home}",d:"#d"}
-	mapkey:=objrawget(keymap,cmd)
-	if(mapkey){
-		press(mapkey)
-	}else if(cmd="u" ||cmd="+u"){
-		to_motion(cmd)
-	}
-	; clipboard:="heko" 
-}
-
-vim(cmd:=""){
-	listlines off
-	showMode()
-	cmd:=(cmd=""?A_thishotkey:cmd)
-	stringlower,cmd,cmd
-	if(cmd ~= "^[0-9]$"&&Mode!=5){
-		Count:=Count . cmd
-		Count:=Ltrim(Count,"0")
-	}
-	footer(Count)
-	if(cmd="esc"&&Count>=1){
-		Count:=""
-		footer(Count)
-		return 
-	}
-	; msgbox,,,% cmd,1
-	if(Leader!=""){
-		Leader:=%Leader%cmd(cmd)
-		return
-	}
-	m:=ModeText[Mode]
-	stringlower,m,m
-	if(m="command"){
-		m:="readline"
-	}
-	%m%(cmd)
-	return
 }
 
 whole_line(){
 	exename:=process_name()
 	keywait,shift
-	send,{up}{end}{right}
+	if (exename ~="godot"){
+		send,{up}{end}{right}
+	}else{
+		send,{home}
+		}
 	send,{shift down}
 	send,{end}
 	if (exename ~="godot"){
@@ -419,9 +343,9 @@ view(cmd){
 change_mode(new_mode){
 	old_mode:=Mode
 	Mode:=new_mode
-	showMode()
+	; showMode() 
 	if(old_mode=5){
-		readline("clear")
+		rlcmd("clear")
 		tip_show("",10,9000,2)
 	}
 	if (Mode=2){
@@ -431,7 +355,8 @@ change_mode(new_mode){
 		suspend,on
 	}else if (Mode=1){
 		; setnumlockstate, off  
-		cReplace:=0
+		tip_show("Normal")
+		Leader:=""
 	}else if(Mode=5){
 		tip_show(" ",10,9000,2)
 	}
@@ -451,26 +376,20 @@ execute(str){
 	; press somekey, execute as normal mode 
 }
 
-replace(cmd){
-	cmd:=hk2str(cmd)
-	send,{del}%cmd% 
-	if(cReplace=0){
-		back_normal()
+
+leader(cmd){
+	i:=leaders.Push(cmd)
+	tip_show("Leader:" leaders[leaders.length()])
+	if(cmd="rl"){
+		rlcmd("")
 	}
 }
-
-
-to_motion(cmd){
-	curmode:=Mode
-	Motion:=cmd
-	if(ModeText[curmode]="View"){
-		; no waiting a move
-		motion("nop")
-	}else{
-		change_mode(3)
-	}
+move(cmd){
+	press(cmd)
 }
-
+edit(cmd){
+	press(cmd)
+}
 back_normal(){
 	change_mode(1)
 }
@@ -507,7 +426,7 @@ alt(){
 			return
 		}
 		if(key="`t") {
-			key={tab}
+			key:="{tab}"
 		}
 		;msgbox,,,% "asc: "asc(key),1
 	}
@@ -569,6 +488,40 @@ stack(op){
 	}
 	; print(op join(stk,",")) 
 	return
+}
+init(){
+	listlines off
+	change_mode(1)
+	setCapsLockState,AlwaysOff
+	loop 26{
+		asciii:=64+A_index
+		char:=chr(asciii)
+		hotkey,% char,vim
+		hotkey,% "+"char,vim
+		hotkey,% "space & "char,vim
+		if(A_index<=ModeText.length())
+		{
+			ModeNum[ModeText[A_index]]:=A_index
+		}
+	}
+	loop 32{
+		asci:=A_index+asc("!")-1
+		char:=chr(asci)
+		hotkey,% char,vim
+		hotkey,% "space & "char,vim
+	}
+	loop 35{
+		asci:=A_index+asc("[")-1
+		char:=chr(asci)
+		hotkey,% char,vim
+		hotkey,% "space & "char,vim
+	}
+	hotks:=["~","space","del","tab","esc","bs","enter"]
+	for index,hotk in hotks
+	{
+		hotkey,%hotk%,vim
+	}
+	normal("i")
 }
 ::opva::
 suspend
