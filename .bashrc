@@ -115,23 +115,28 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-echo Hello $USER
+echo $USER, Do Not Repeat Yourself, Untouch is best touch
 set -o vi
 alias ..="cd .."
 alias -- -="cd -"
 alias rm="rm -i"
+alias sl="ls"
 # alias open="powershell.exe start "
 # bash is suitable for combining command, not for computing data
 # So you need learn to python and bash 
 # when both combined, you are the almighty
-alias c=cat
 alias py=python3
 
 # for debug string
 export PS4='@$LINENO '
 
 if type "nvim" &> /dev/null;then
-	export VISUAL="nvim"
+	# export VISUAL="nvim" 
+	# nvim's shell is not interactive, but vim is
+	# but the requirement of space in everywhere of vim9script is
+	# unnecessary, or we need a format tool
+	# After all, type less and do more is my goal 
+	export VISUAL="vim"
 else
 	export VISUAL="vi"
 fi

@@ -52,9 +52,6 @@ return
 
 ; ^ ctrl ! alt + shift # win 
 
-DEBUG(arg){
-	tip_show(arg,10,50,3)
-}
 
 rlcmd(cmd){
 	static Read:=""
@@ -62,7 +59,7 @@ rlcmd(cmd){
 		command(Read)
 		; print(Read,1) 
 		Read:=""
-		tip_show("",10,9000,2)
+		footer("")
 		return 
 	}else if(cmd="clear" || cmd="space & u"){
 		Read:=""
@@ -72,12 +69,11 @@ rlcmd(cmd){
 		cmd:=hk2str(cmd)
 		Read:=Read . cmd
 	}
-	tip_show(strlen(Read)?Read:" ",10,9000,2)
+	footer(strlen(Read)?Read:" ")
 	return "rl"
 }
 command(cmd){
-	static simplemap:={bb:"{browser_back}",bf:"{browser_forward}",w:"^s"
-		,vda:"^#d",vdn:"^#{right}",vdp:"^#{left}",vdc:"^#{f4}"
+	static simplemap:={bb:"{browser_back}",bf:"{browser_forward}",w:"^s" ,vda:"^#d",vdn:"^#{right}",vdp:"^#{left}",vdc:"^#{f4}"
 		,wl:"#{left}",wr:"#{right}",wls:"^!{tab}"
 		,q:"!{f4}",wq:"^s!{f4}"
 		,vm:"{vkad}",vu:"{vkaf 2}",vd:"{vkae 2}" }
@@ -103,23 +99,16 @@ command(cmd){
 		press(simplemap[cmd])
 	}
 }
-topcmd(num){
-	winset,Alwaysontop,%num%,A
-}
 
 
 mcmd(cmd){
 	if(cmd="q"){
 		return
-		}
-	; click-as
-	; fine tone-hjklionm
-	; wide move-udwb
-	; scroll-zx
+	}
 	winGetActiveStats,t,w,h,x,y
 	dh:=3
 	dw:=4
-	gain:=1.6
+	gain:=2
 	if(cmd="a"){
 		click,down
 		keywait,a
@@ -131,43 +120,34 @@ mcmd(cmd){
 		winclose ,A
 	}else if(cmd="s"){
 		click,right
-	}else if(cmd="m"){
-		smooth_move_mouse("m",dw*gain,dh*gain)
-	}else if(cmd="n"){
-		smooth_move_mouse("n",-dw*gain,dh*gain)
-	}else if(cmd="o"){
-		smooth_move_mouse("o",dw*gain,-dh*gain)
-	}else if(cmd="i"){
-		smooth_move_mouse("i",-dw*gain,-dh*gain)
-	}else if(cmd="j"){
-		smooth_move_mouse("j",0,dh*gain)
-	}else if(cmd="k"){
-		smooth_move_mouse("k",0,-dh*gain)
-	}else if(cmd="h"){
-		smooth_move_mouse("h",-dh*gain,0)
-	}else if(cmd="l"){
-		smooth_move_mouse("l",dh*gain,0)
-	}else if(cmd="u"){
-		mousemove,0,-h/dh,0,R
-	}else if(cmd="d"){
-		mousemove,0,h/dh,0,R
-	}else if(cmd="b"){
-		mousemove,-w/dw,0,0,R
-	}else if(cmd="w"){
-		mousemove,w/dw,0,0,R
-	}else if(cmd="x"){
-		smooth_scroll("x","down")
+	}else if(cmd~="^[jkhlionm]$"){
+		vecs:={j:[0,1],k:[0,-1],h:[-1,0],l:[1,0],m:[1,1],n:[-1,1],i:[-1,-1],o:[1,-1]}
+		v:=vecs[cmd]
+		x:=v[1]*dh*gain
+		y:=v[2]*dh*gain
+		smooth_move_mouse(cmd,x,y)
+	}else if(cmd~="[udwb]$"){
+		vecs:={d:[0,1],u:[0,-1],b:[-1,0],w:[1,0]}
+		k:=substr(cmd,strlen(cmd))
+		if(substr(cmd,1,1)="+"){
+			w:=A_screenwidth
+			h:=A_screenheight
+		}
+		v:=vecs[k]
+		x:=v[1]*w/dw
+		y:=v[2]*h/dh
+		mousemove,x,y,0,R
+	}else if(cmd~="^[zx]$"){
+		tmap:={x:"down",z:"up"}
+		smooth_scroll(cmd,tmap[cmd])
 	}else if(cmd="space & x"){
 		send ^{click wheeldown}
 	}else if(cmd="space & z"){
 		send ^{click wheelup}
-	}else if(cmd="z"){
-		smooth_scroll("z","up")
 	}else if(cmd="enter"){
 		send,{enter}
 	}else if(cmd~="space & [a-z0-9]"){
 		k:=substr(cmd,strlen(cmd))
-		; print(k) 
 		press("^" k)
 	}
 	return "m"
@@ -175,11 +155,7 @@ mcmd(cmd){
 dcmd(cmd){
 	static ld:=""
 	if (cmd="d"){
-		if(process_name() ~= "godot"){
-			press("^x")
-		} else{
-		press("{home}" select("{end}") "^x")
-		}
+		whole_line()
 		return
 	}
 	fn:="normal"
@@ -197,7 +173,7 @@ dcmd(cmd){
 	}
 }
 ccmd(cmd){
-	res:=dcmd(cmd)
+	res:=dcmd(cmd="c"?"d":cmd)
 	if(res){
 		return res
 	}
@@ -205,19 +181,20 @@ ccmd(cmd){
 }
 rcmd(cmd){
 	if(cmd!="esc"){
-		press("{ins}" cmd "{ins}")
+		press("{del}" cmd )
+		; press("{ins}" cmd "{ins}") 
 		return "r"
 	}
 }
 gcmd(cmd,only_text:=false){
-	static map:={g:"{home}"}
+	static map:={g:"^{home}",t:"^{tab}","+t":"^+{tab}"}
 	if(only_text){
 		return ["move",map[cmd]]
 	}
 	move(map[cmd])
 }
 vcmd(cmd){
-	static map:={x:"^x",y:"^c"}
+	static map:={x:"^x",d:"^x",y:"^c"}
 	k:=map[cmd]
 	if(k){
 		press(k)
@@ -233,20 +210,22 @@ vcmd(cmd){
 	}
 }
 select(cmd){
+	keywait,shift
 	return "{shift down}" cmd "{shift up}"
 }
 
 normal(cmd,only_text:=false){
 	static maps:=[{name:"move"
-		,j:"{down}",k:"{up}",h:"{left}",l:"{right}","+g":"{end}"
+		,j:"{down}",k:"{up}",h:"{left}",l:"{right}","+g":"^{end}"
+		,"space & d":"{pgdn}","space & u":"{pgup}"
 		,"$":"{end}","^":"{home}",w:"^{right}",b:"^{left}"}
 	,{name:"edit"
 	,p:"^v",tab:"{tab}"
-	,"-":"!{down}","_":"!{up}","+":"^d"
+	,"-":"!{down}","_":"!{up}","+":"^d",bs:"{bs}"
 	,x:"+{left}^x","+x":"+{right}^x",u:"^z","+u":"^y",enter:"{enter}"}
 	,{name:"eval"
 	,"+d":"d,$","+a":"$,i","+i":"^,i","+c":"c,$"
-	,"o":"$,enter,i"
+	,"o":"$,enter,i" ,"+o":"^,h,enter,i"
 	,s:"x,i","+s":"+x,i"}
 	,{name:"leader"
 	,d:"d",c:"c",r:"r",g:"g",m:"m",v:"v",":":"rl"}
@@ -273,13 +252,13 @@ eval(cmd){
 				leaders.pop()
 			}
 			if(mode=2){
-				tip_show("")
+				mode_show("")
 			}else{
-				tip_show((leaders.length()<=0?"Normal":"Leader:" leaders[leaders.length()]))
+				mode_show((leaders.length()<=0?"Normal":"Leader:" leaders[leaders.length()]))
 			}
 		}
 		else{
-			tip_show("Normal")
+			mode_show("Normal")
 			normal(scmd)
 		}
 	}
@@ -306,39 +285,15 @@ hk2str(cmd){
 }
 
 whole_line(){
-	exename:=process_name()
 	keywait,shift
-	if (exename ~="godot"){
-		send,{up}{end}{right}
-	}else{
-		send,{home}
-		}
-	send,{shift down}
-	send,{end}
-	if (exename ~="godot"){
-		send,{right}
+	exename:=process_name()
+	if(exename ~= "godot"){
+		press("^x")
+	} else{
+		press("{home}" select("{end}{right}") "^x")
 	}
-	send,{shift up}
 }
 
-view(cmd){
-	keywait,shift
-	if(cmd="+gxxx"){
-		send,+{end}
-	}else{
-		send,{shift down}
-		normal(cmd)
-		send,{shift up}
-	}
-	if(Mode=2){
-		return
-	}
-	if cmd not in j,k,h,l,w,b,e,c,s,g,+g
-	{
-		; msgbox,,,% cmd, .5
-		back_normal()
-	}
-}
 
 change_mode(new_mode){
 	old_mode:=Mode
@@ -346,7 +301,7 @@ change_mode(new_mode){
 	; showMode() 
 	if(old_mode=5){
 		rlcmd("clear")
-		tip_show("",10,9000,2)
+		footer("")
 	}
 	if (Mode=2){
 		tooltip
@@ -355,10 +310,10 @@ change_mode(new_mode){
 		suspend,on
 	}else if (Mode=1){
 		; setnumlockstate, off  
-		tip_show("Normal")
-		Leader:=""
+		mode_show("Normal")
+		leaders:=[]
 	}else if(Mode=5){
-		tip_show(" ",10,9000,2)
+		footer(" ")
 	}
 }
 
@@ -379,7 +334,7 @@ execute(str){
 
 leader(cmd){
 	i:=leaders.Push(cmd)
-	tip_show("Leader:" leaders[leaders.length()])
+	mode_show("Leader:" leaders[leaders.length()])
 	if(cmd="rl"){
 		rlcmd("")
 	}
@@ -419,7 +374,7 @@ smooth_scroll(key,stat){
 alt(){
 	winget,name,processname,A
 	key:=""
-	if (name="msedge.exe" ){
+	if (name="chrome.exe" ){
 		input,key,l1 t0.3 ,{LALT}
 		if(asc(key)=0){
 			edge_pdf_focus()
@@ -444,14 +399,18 @@ edge_pdf_focus(){
 	}
 	current_title:=title
 }
+DEBUG(arg){
+	tip_show(arg,10,50,3)
+}
+mode_show(arg){
+	off:=-9999
+	tip_show(arg,off,off)
+}
 footer(arg){
-	tip_show(arg,10,9000,2)
+	tip_show(arg,-9990,9000,2)
 }
 tip_show(arg,x:=10,y:=-2000,num:=1){
 	tooltip , % arg,x,y,num
-}
-showMode(){
-	tooltip % "Mode="ModeText[Mode],10,-4000
 }
 tpcmd(readin){
 	arr:=split(readin," ")
@@ -467,6 +426,9 @@ tpcmd(readin){
 	if(stp!="off")
 		stp:=stp/100*255
 	winset,transparent,% stp,A
+}
+topcmd(num){
+	winset,Alwaysontop,%num%,A
 }
 stack(op){
 	static global_var:=["Mode","Leader","Count"]

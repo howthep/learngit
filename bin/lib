@@ -1,15 +1,22 @@
 #!/bin/bash
+export LSV_PORT=8888
 _doc_base_cmd (){
  for fname ;do
 	 ! test -f $fname&&continue
 	 cname=${fname%.*} #no extname
 	 bname=${cname##*/} #no pathname
 	 #echo  $bname
+	 # set -x 
 	 eval "$bname(){
 	 local path=$fname
 	 case "\$1" in
 		 -e)
-			 $VISUAL + \$path
+			 $VISUAL  \$path
+			 ;;
+		 -l)
+			 shift;
+			 local a=\${1:-1};local b=\${2:-\"\$\"};
+			 cat \$path|sed -n \"\${a},\${b}p\"
 			 ;;
 		 *)
 			 cat \$path
@@ -33,12 +40,27 @@ mcd(){
 		# don't use exit, it will exit current shell
 	fi
 }
+
+let lsvport=8000-1
+
+lsv(){
+	if test -n "$1";then
+		lsvport=$1
+	else
+		((lsvport++))
+	fi
+	livereload -p $lsvport &> /dev/null &
+	local msg="localhost:$lsvport"
+	echo $msg|clip.exe
+	echo $msg have been pasted to clipboard
+}
+
 if [ -n "$WSL_DISTRO_NAME " ];then
 alias psh="powershell.exe"
-open(){
-	local OPEN="powershell.exe start "
+open(){ local OPEN="powershell.exe start "
 	for i in "$@";do
 		eval "$OPEN $i"
 	done
  }
+alias msedge="open msedge"
 fi
