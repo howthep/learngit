@@ -63,4 +63,6 @@ open(){ local OPEN="powershell.exe start "
 	done
  }
 alias msedge="open msedge"
+alias getclip="powershell.exe Get-Clipboard"
+alias setclip="powershell.exe Set-Clipboard"
 fi

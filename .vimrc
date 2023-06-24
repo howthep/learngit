@@ -92,6 +92,7 @@ augroup maingroup
 	autocmd	Filetype {txt,help} setlocal nowrap
 	autocmd	Filetype markdown setlocal smartindent
 	autocmd	Filetype sh  nnoremap <buffer> <F5> :w\|!bash %<cr>
+	autocmd	Filetype perl  nnoremap <buffer> <F5> :w\|!perl %<cr>
 	autocmd	Filetype vim nnoremap <buffer> <F5> :w\|so %<cr>
 	autocmd	Filetype python nnoremap <buffer> <F5> :w\|!python3 %<cr>
 	autocmd	Filetype autohotkey nnoremap <buffer> <F5> :w\|!powershell.exe start %<cr>
@@ -100,8 +101,9 @@ augroup maingroup
 	autocmd	Filetype vim iabbrev <buffer> bf <buffer>
 	autocmd	Filetype vim iabbrev <buffer> fdmk "{{{<cr><cr>}}}<up><bs>
 	"for comment flag
-	autocmd	Filetype {python,sh} let b:CMT='#'
+	autocmd	Filetype {python,sh,perl} let b:CMT='#'
 	autocmd	Filetype {lua} let b:CMT='--'
+	autocmd	Filetype {c} let b:CMT='//'
 	autocmd	Filetype {css} let b:CMT='/*:*/'
 	"
 	autocmd	Filetype {qf} unmap <buffer> <cr>
@@ -146,8 +148,8 @@ vnoremap <leader>* c*<C-r>"*<Esc>
 vnoremap <leader>_ c_<C-r>"_<Esc>
 nnoremap <leader>ev :vsplit $MYVIMRC<cr>
 nnoremap <leader>bb :buffers <cr>
-nnoremap <leader>bn :bn <cr>
-nnoremap <leader>bp :bp <cr>
+nnoremap <leader>bn :w\|bn <cr>
+nnoremap <leader>bp :w\|bp <cr>
 nnoremap <leader>sw *
 nnoremap <leader>j <c-d>
 nnoremap <leader>k <c-u>
@@ -192,11 +194,10 @@ vnoremap L $
 " function Comment {{{
  
 function! Comment()
-	if len(getbufvar(bufname(),"CMT"))==0
-		echo "you need let b:CMT as your comment flag"
-		return
+	let acmt=&cms->split("%s")
+	if len(getbufvar(bufname(),"CMT"))>0
+		let acmt=b:CMT->split(":")
 	endif
-	let acmt=b:CMT->split(":")
 	let head=acmt[0]
 	let tail=acmt->get(1,"")
 	

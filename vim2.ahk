@@ -27,19 +27,12 @@ init()
 ; ==============================================================================
 
 ; global key
-*capslock::
-	Suspend ; state revert
-	send,{Ctrl down}
-	keywait, capslock ; keep down
-	send,{Ctrl up}
-	Suspend ; restore state by revertting again
-	return
-	alt::
+alt::
 	suspend
 	alt()
 	suspend
 	return
-	lctrl::
+	capslock::
 	Suspend
 	Suspend,off
 	change_mode(1)
@@ -47,6 +40,9 @@ init()
 	#t::
 	suspend
 	run wt.exe
+	sleep 300
+	winactivate, ahk_exe WindowsTerminal.exe
+	; winactivate 
 	suspend
 return
 
@@ -225,7 +221,7 @@ normal(cmd,only_text:=false){
 	,x:"+{left}^x","+x":"+{right}^x",u:"^z","+u":"^y",enter:"{enter}"}
 	,{name:"eval"
 	,"+d":"d,$","+a":"$,i","+i":"^,i","+c":"c,$"
-	,"o":"$,enter,i" ,"+o":"^,h,enter,i"
+	,"o":"$,enter,i" ,"+o":"^,enter,k,i"
 	,s:"x,i","+s":"+x,i"}
 	,{name:"leader"
 	,d:"d",c:"c",r:"r",g:"g",m:"m",v:"v",":":"rl"}
@@ -284,14 +280,19 @@ hk2str(cmd){
 	return cmd
 }
 
-whole_line(){
+whole_line(delete_line:=true){
 	keywait,shift
 	exename:=process_name()
+	line:=""
+	op:=(delete_line?"^x":"")
 	if(exename ~= "godot"){
-		press("^x")
+		line:=""
+	}else if(exename ~= "WINWORD"){
+		line:="{home}" select("{end}")
 	} else{
-		press("{home}" select("{end}{right}") "^x")
+		line:="{home}" select("{end}{right}") 
 	}
+	press(line op)
 }
 
 
@@ -374,7 +375,7 @@ smooth_scroll(key,stat){
 alt(){
 	winget,name,processname,A
 	key:=""
-	if (name="chrome.exe" ){
+	if (name="msedge.exe" ){
 		input,key,l1 t0.3 ,{LALT}
 		if(asc(key)=0){
 			edge_pdf_focus()

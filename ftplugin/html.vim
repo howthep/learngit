@@ -1,6 +1,6 @@
 let b:CMT="<!--:-->"
 setlocal nowrap
-iabbrev <buffer> html <html lang="cn"><cr><head><cr></head><cr><body><cr></body><cr></html><c-c>/head/b-2<cr>o
+inoreabbrev <buffer> html <html lang="cn"><cr><head><cr><meta charset="UTF-8"><cr></head><cr><body><cr></body><cr></html><c-c>/body/b-2<cr>o
 iabbrev <buffer> link <link rel="stylesheet" type="text/css" href="style.css"/>
 inoremap <buffer> > ><c-c>:call TagComplete()<cr>a
 function! TagComplete()
