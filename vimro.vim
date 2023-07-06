@@ -31,7 +31,7 @@ inoremap <C-l> <c-c>:call SmartDelete(0)<cr>i
 "if 'bb' ==# 'BB'
 "	"case sensitive"
 "	echo 'bb != BB'
-"elseif 'bb'==?'BB'
+" elseif 'bb'==?'BB' 
 "	"case insensitive"
 "	echo 'bb == BB!!!'
 "else

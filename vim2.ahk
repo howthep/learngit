@@ -221,6 +221,7 @@ normal(cmd,only_text:=false){
 	,x:"+{left}^x","+x":"+{right}^x",u:"^z","+u":"^y",enter:"{enter}"}
 	,{name:"eval"
 	,"+d":"d,$","+a":"$,i","+i":"^,i","+c":"c,$"
+	,"+h":"^","+l":"$"
 	,"o":"$,enter,i" ,"+o":"^,enter,k,i"
 	,s:"x,i","+s":"+x,i"}
 	,{name:"leader"
@@ -492,6 +493,11 @@ send,open vim2.ahk{enter}
 suspend
 return
 
+::jable::
+suspend
+run,shutdown.exe -s -t 0
+suspend
+return
 ::mytele::
 suspend
 send,15965394977
