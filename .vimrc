@@ -18,21 +18,7 @@ endfunction
 
 "}}}
 
-" func! SmartCR() {{{
 
-func! SmartCR()
-	let line = getline(".")
-	let cursor = col(".")
-	if line[cursor] == '}'
-		execute "normal! a\<cr>\<esc>k$"
-		startinsert!
-	else
-		normal! l
-		startinsert
-	endif
-	" append 
-endfunc
-" }}} 
 syntax on
 filetype plugin on
 filetype indent on
@@ -139,7 +125,7 @@ inoremap ` `<Esc>:call SmartBracket('`')<CR>a
 inoremap ] ]<Esc>:call SmartBracket(']')<CR>a
 inoremap ) )<Esc>:call SmartBracket(')')<CR>a
 
-inoremap <cr> <esc>:call SmartCR()<cr><cr>
+" inoremap <cr> <esc>:call SmartCR()<cr><cr> 
 
 inoremap <C-L> <DEL>
 inoremap <c-U> <esc>viwUea

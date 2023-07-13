@@ -375,20 +375,11 @@ smooth_scroll(key,stat){
  }
 alt(){
 	winget,name,processname,A
-	key:=""
 	if (name="msedge.exe" ){
-		input,key,l1 t0.3 ,{LALT}
-		if(asc(key)=0){
-			edge_pdf_focus()
+		edge_pdf_focus()
 			return
-		}
-		if(key="`t") {
-			key:="{tab}"
-		}
-		;msgbox,,,% "asc: "asc(key),1
 	}
-	;msgbox,% name
-	send,{alt down}%key%
+	send,{alt down}
 	keywait, lalt
 	send,{alt up}
 }
@@ -397,7 +388,6 @@ edge_pdf_focus(){
 	wingetactivetitle,title ;
 	if( current_title!=title && regexmatch(title,".*\.pdf") ){
 		send,{F6}+{F6} ; focus on main page
-			;msgbox,,,% title,1
 	}
 	current_title:=title
 }
