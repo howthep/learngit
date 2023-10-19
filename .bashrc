@@ -115,7 +115,6 @@ if ! shopt -oq posix; then
     . /etc/bash_completion
   fi
 fi
-echo $USER, Do Not Repeat Yourself, Untouch is best touch
 set -o vi
 alias ..="cd .."
 alias -- -="cd -"
