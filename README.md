@@ -25,6 +25,12 @@
 - stash 
 	- list
 	- pop
+### sshkey
+```
+ssh-keygen -t rsa -C "xxx@xxx.com"
+cat id_rsa.pub
+```
+copy to github-setting-ssh
 ### Remote
 - remote set-url origin [github url]
 ### config
