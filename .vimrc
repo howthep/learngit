@@ -34,7 +34,7 @@ set showmode
 set showcmd
 
 "colorscheme slate
-colorscheme odesert
+colorscheme desert
 set scrolloff=2
 set shiftwidth=4
 set tabstop=4
@@ -49,7 +49,7 @@ set fileencodings=utf-8,gbk
 set enc=utf-8
 set mouse=
 set incsearch
-set nohlsearch
+set hlsearch
 "set guifont =Lucida_Sans_Typewriter:h18:cANSI:qDRAFT 
 set sessionoptions+=unix,slash
 set smartcase
