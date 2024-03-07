@@ -201,6 +201,10 @@ function! Comment()
 	if len(getbufvar(bufname(),"CMT"))>0
 		let acmt=b:CMT->split(":")
 	endif
+	if len(acmt)<=0
+		return
+	endif
+
 	let head=acmt[0]
 	let tail=acmt->get(1,"")
 	
@@ -215,6 +219,7 @@ function! Comment()
 	else
 		" echo "not is comment" 
 		let newline=substitute(line,'\v^(\s*)(.*)','\1'.head.' \2 '.tail,'')
+											  "indent . head . content . tail"
 	endif
 	call setline(".",newline)
 	normal ^
